@@ -336,6 +336,11 @@ int main(int argc, char* argv[])
     ComputeNormals(&lefthandmodel);
     BuildTrianglesAndAddToVirtualScene(&lefthandmodel);
 
+    ObjModel cubemodel("../../data/cube.obj");
+    ComputeNormals(&cubemodel);
+    BuildTrianglesAndAddToVirtualScene(&cubemodel);
+
+
 
     if ( argc > 1 )
     {
@@ -387,7 +392,7 @@ int main(int argc, char* argv[])
         {1.1f, 0.8f, -0.4f, 0.1f, 0.3f, 1.2f},
         {-1.2f, 0.5f, -0.4f, 0.1f, 0.3f, 1.2f},
     };
-    #define DIED camera_position_c.y < 0.5
+    #define DIED camera_position_c.y < -3.0f
     #define START_POSITION glm::vec4(0.0f, 1.0f, 3.5f, 1.0f)
     #define INITIAL_THETA 3.14159f
     #define INITIAL_PHI -0.465
@@ -523,11 +528,11 @@ int main(int argc, char* argv[])
 /// ---------------------------------------------------------------------------------------
 /// ---------------------------------------------------------------------------------------
 
-/*
+        //GLint render_as_black_uniform = glGetUniformLocation(program_id, "render_as_black");
         glm::mat4 model = Matrix_Identity();
 
         /// DESENHANDO OS CUBOS
-        for (int i = 0; i < int (cubos.size()) ; ++i)
+   /*     for (int i = 0; i < int (cubos.size()) ; ++i)
         {
             // Cada cópia do cubo possui uma matriz de modelagem independente,
 
@@ -551,7 +556,6 @@ int main(int argc, char* argv[])
             // Informamos para a placa de vídeo (GPU) que a variável booleana
             // "render_as_black" deve ser colocada como "false". Veja o arquivo
             // "shader_vertex.glsl".
-            glUniform1i(render_as_black_uniform, false);
 
             // Pedimos para a GPU rasterizar os vértices do cubo apontados pelo
             // VAO como triângulos, formando as faces do cubo. Esta
@@ -578,7 +582,6 @@ int main(int argc, char* argv[])
             // Informamos para a placa de vídeo (GPU) que a variável booleana
             // "render_as_black" deve ser colocada como "true". Veja o arquivo
             // "shader_vertex.glsl".
-            glUniform1i(render_as_black_uniform, true);
 
             // Pedimos para a GPU rasterizar os vértices do cubo apontados pelo
             // VAO como linhas, formando as arestas pretas do cubo. Veja a
@@ -605,8 +608,6 @@ int main(int argc, char* argv[])
         glLineWidth(10.0f);
 
         // Informamos para a placa de vídeo (GPU) que a variável booleana
-
-        glUniform1i(render_as_black_uniform, false);
 
         // Pedimos para a GPU rasterizar os vértices dos eixos XYZ
 
@@ -645,9 +646,9 @@ int main(int argc, char* argv[])
 
         glfwPollEvents();
 
-        */
 
 
+*/
 
 
 
@@ -671,7 +672,7 @@ int main(int argc, char* argv[])
 
 
 
-        glm::mat4 model = Matrix_Identity();
+        model = Matrix_Identity();
 
         // Enviamos as matrizes "view" e "projection" para a placa de vídeo
         // (GPU). Veja o arquivo "shader_vertex.glsl", onde estas são
@@ -743,6 +744,12 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(object_id_uniform, AIM);
         DrawVirtualObject("plane");
+
+
+        model = Matrix_Translate(0.0f,-1.0f,3.5f);
+        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(object_id_uniform, AIM);
+        DrawVirtualObject("cube");
 
 
         // Pegamos um vértice com coordenadas de modelo (0.5, 0.5, 0.5, 1) e o
