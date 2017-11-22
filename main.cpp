@@ -385,17 +385,20 @@ int main(int argc, char* argv[])
     glm::vec4 u ;
     std::vector<objeto> cubos =
     {
-        {-1.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f},
-        {0.0f, 0.05f, 0.0f, 1.0f, 1.0f, 1.0f},
-        {0.0f, 0.12f, -2.0f, 1.0f, 1.0f, 1.0f},
-        {2.0f, 0.16f, -2.5f, 1.0f, 1.0f, 5.0f},
-        {1.1f, 0.8f, -0.4f, 0.1f, 0.3f, 1.2f},
-        {-1.2f, 0.5f, -0.4f, 0.1f, 0.3f, 1.2f},
+        {-1.5f, 0.6f, 0.0f, 4.0f, 1.0f, 4.0f},
+        {4.0f, 1.2f, 0.0f, 4.0f, 4.0f, 4.0f},
+        {7.5f, 0.12f, -7.5f, 4.0f, 4.0f, 4.0f},
+        {14.0f, 0.16f, -20.5f, 4.0f, 4.0f, 12.0f},
+        //{3.1f, 0.8f, -0.4f, 0.1f, 0.3f, 1.2f},
+       // {1.2f, 0.5f, -0.4f, 0.1f, 0.3f, 1.2f},
     };
-    #define DIED camera_position_c.y < -3.0f
-    #define START_POSITION glm::vec4(0.0f, 1.0f, 3.5f, 1.0f)
-    #define INITIAL_THETA 3.14159f
+    #define DIED camera_position_c.y < -0.5f
+    //#define INITIAL_THETA 3.14159f
+    #define INITIAL_THETA -0.5f
     #define INITIAL_PHI -0.465
+    #define ALTURAHERO 1.9f
+    //#define START_POSITION glm::vec4(-1.5,0.7 + ALTURAHERO,0,1.0f)
+    #define START_POSITION glm::vec4(14.0f,2.16f + ALTURAHERO,-26.0f,1.0f)
     resetLife(&novoX,&novoZ);
 
 /// ---------------------------------------------------------------------------------------
@@ -688,13 +691,13 @@ int main(int argc, char* argv[])
         #define ARM 4
 
         // Desenhamos o modelo da esfera
-        model = Matrix_Translate(-1.0f,0.0f,0.0f);
+        model = Matrix_Translate(-7.0f,0.0f,-2.0f);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(object_id_uniform, SPHERE);
         DrawVirtualObject("sphere");
 
         // Desenhamos o modelo do coelho
-        model = Matrix_Translate(1.0f,0.0f,0.0f)
+        model = Matrix_Translate(-7.0f,0.0f,2.0f)
               * Matrix_Rotate_Z(g_AngleZ)
               * Matrix_Rotate_Y(g_AngleY)
               * Matrix_Rotate_X(g_AngleX);
@@ -746,10 +749,14 @@ int main(int argc, char* argv[])
         DrawVirtualObject("plane");
 
 
-        model = Matrix_Translate(0.0f,-1.0f,3.5f);
-        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(object_id_uniform, AIM);
-        DrawVirtualObject("cube");
+         for(int i = 0; i < (int) cubos.size(); i++)
+        {
+           model = Matrix_Translate(cubos[i].x,cubos[i].y,cubos[i].z)
+                 * Matrix_Scale(cubos[i].dx,cubos[i].dy,cubos[i].dz);
+            glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+            glUniform1i(object_id_uniform, AIM);
+            DrawVirtualObject("cube");
+        }
 
 
         // Pegamos um vértice com coordenadas de modelo (0.5, 0.5, 0.5, 1) e o
@@ -1857,7 +1864,7 @@ void testaChao(float novoX,float novoZ,unsigned int *startFall,unsigned int actu
     {
         if((entreLimites(novoX,cubos[i].x,cubos[i].dx,0.0f))
                 &&(entreLimites(novoZ,cubos[i].z,cubos[i].dz,0.0f))
-                &&(entreLimites(camera_position_c.y,cubos[i].y,cubos[i].dy,0.2f)))
+                &&(entreLimites(camera_position_c.y,cubos[i].y,cubos[i].dy,ALTURAHERO)))
 
         {
             CAINDO = false;
@@ -1879,11 +1886,11 @@ void trataColisaoCubo(float novoX,float antigoY,float novoZ, int nearest,bool *i
     {
         if(antigoY != camera_position_c.y && antigoY >= cubos[nearest].y + (cubos[nearest].dy)/2 + 0.1f )
         {
-            processaPouso(antigoY,cubos[nearest].y,cubos[nearest].dy,0.2f);
+            processaPouso(antigoY,cubos[nearest].y,cubos[nearest].dy,ALTURAHERO);
         }
         else
         {
-            if (entreLimites(camera_position_c.y,cubos[nearest].y,cubos[nearest].dy,0.19f))
+            if (entreLimites(camera_position_c.y,cubos[nearest].y,cubos[nearest].dy,ALTURAHERO -0.01f))
             {
                 *invadiuObjeto = true;
             }
@@ -1893,7 +1900,7 @@ void trataColisaoCubo(float novoX,float antigoY,float novoZ, int nearest,bool *i
     {
         if(oldCubo == -1)
         {
-            if (processaPouso(antigoY,cubos[nearest].y,cubos[nearest].dy,0.19f))
+            if (processaPouso(antigoY,cubos[nearest].y,cubos[nearest].dy,ALTURAHERO -0.01f))
             {
 
             }
@@ -1916,7 +1923,7 @@ void trataColisaoCubo(float novoX,float antigoY,float novoZ, int nearest,bool *i
             //std::cout <<  cubos[nearest].y + cubos[nearest].dy/2   <<std::endl <<std::endl;
             //std::cout <<  cubos[nearest].y - cubos[nearest].dy/2   <<std::endl <<std::endl;
             //std::cout <<  entreLimites(camera_position_c.y,cubos[nearest].y,cubos[nearest].dy,0.0f) <<std::endl <<std::endl;
-            if (entreLimites(camera_position_c.y ,cubos[nearest].y,cubos[nearest].dy,0.2f))
+            if (entreLimites(camera_position_c.y ,cubos[nearest].y,cubos[nearest].dy,ALTURAHERO))
             {
                 *invadiuObjeto = true;
             }
