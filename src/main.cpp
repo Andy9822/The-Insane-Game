@@ -1328,7 +1328,6 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
         }
         if (g_CameraPhi < phimin)
             g_CameraPhi = phimin;
-        printf("%f - %d \n", g_LastCursorPosX, g_width);
 
         // Atualizamos as variáveis globais para armazenar a posição atual do
         // cursor como sendo a última posição conhecida do cursor.
@@ -2017,7 +2016,6 @@ void aplicaGravidade()
     if (JUMPING)
     {
         camera_position_c.y +=  0.02;
-        cout << actualSecond << endl;
         if(actualSecond - startJump > 3)
         {
             JUMPING = false;
