@@ -580,15 +580,16 @@ int main(int argc, char* argv[])
         }
 
         if(g_LeftMouseButtonPressed){
-            arrows.push_back(Arrow(camera_position_c, camera_view_vector));
+            arrows.push_back(Arrow(camera_position_c, camera_view_vector, g_CameraTheta, g_CameraPhi));
             engine->play2D("../../audio/arco.mp3", false);
         }
 
-        for(int i = 0; i < (int) arrows.size(); i++){
+        for(unsigned i = 0; i < arrows.size(); i++){
             updateArrow(&arrows[i], whileTime);
-
+            glm::vec4 uNew = -arrows[i].speed/norm(arrows[i].speed);
             model = Matrix_Translate(arrows[i].pos.x, arrows[i].pos.y, arrows[i].pos.z)
-                *   Matrix_Rotate(g_CameraTheta, camera_up_vector);
+                    * Matrix_Rotate(arrows[i].phiAngle, crossproduct(camera_up_vector, uNew))
+                    * Matrix_Rotate(arrows[i].thetaAngle, camera_up_vector);
             glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
             glUniform1i(object_id_uniform, AIM);
             DrawVirtualObject("arrow");

@@ -9,10 +9,14 @@ struct Arrow {
 
     glm::vec4 pos;
     glm::vec4 speed;
+    float thetaAngle;
+    float phiAngle;
 
-    Arrow(glm::vec4 initialPos, glm::vec4 speedI){
+    Arrow(glm::vec4 initialPos, glm::vec4 speedI, float theta, float phi){
         pos = initialPos;
-        speed = 3.0f*speedI;
+        speed = speedI;
+        thetaAngle = theta;
+        phiAngle = phi;
     }
 
 };
