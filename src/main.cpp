@@ -584,10 +584,11 @@ int main(int argc, char* argv[])
             engine->play2D("../../audio/arco.mp3", false);
         }
 
-        for(int i = 0; i < arrows.size(); i++){
+        for(int i = 0; i < (int) arrows.size(); i++){
             updateArrow(&arrows[i], whileTime);
 
-            model = Matrix_Translate(arrows[i].pos.x, arrows[i].pos.y, arrows[i].pos.z);
+            model = Matrix_Translate(arrows[i].pos.x, arrows[i].pos.y, arrows[i].pos.z)
+                *   Matrix_Rotate(g_CameraTheta, camera_up_vector);
             glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
             glUniform1i(object_id_uniform, AIM);
             DrawVirtualObject("arrow");
