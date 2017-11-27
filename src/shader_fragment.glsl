@@ -103,7 +103,7 @@ void main()
             //   variável position_model
 
             vec4 bbox_center = (bbox_min + bbox_max) / 2.0;
-            vec4 p = position_model - bbox_center;
+            p = position_model - bbox_center;
             float ro = length(p);
             float teta = atan(p.x, p.z);
             float fi = asin(p.y/ro);
