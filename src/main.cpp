@@ -411,6 +411,8 @@ int main(int argc, char* argv[])
     glm::vec4 nextPosition;
     glm::vec4 camera_view_vector;
     float deslocamento = 1.0f;
+    bool charging = false;
+    double chargeTime = 0.0f;
 
     glm::vec4 w ;
     glm::vec4 u ;
@@ -579,8 +581,16 @@ int main(int argc, char* argv[])
             DrawVirtualObject("cube");
         }
 
-        if(g_LeftMouseButtonPressed){
-            arrows.push_back(Arrow(camera_position_c, camera_view_vector, g_CameraTheta, g_CameraPhi));
+        if(g_LeftMouseButtonPressed && !charging){
+            charging = true;
+            chargeTime = (glfwGetTime() * 5);
+        }
+        if(!g_LeftMouseButtonPressed && charging){
+            charging = false;
+            chargeTime = (glfwGetTime() * 5) - chargeTime;
+            if(chargeTime > 5.0)
+                chargeTime = 5.0;
+            arrows.push_back(Arrow(camera_position_c, (float)chargeTime*camera_view_vector, g_CameraTheta, g_CameraPhi));
             engine->play2D("../../audio/arco.mp3", false);
         }
 
