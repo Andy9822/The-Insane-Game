@@ -1100,7 +1100,7 @@
 	<inttypes.h>
 	<stdint.h>
 
-1511831232 source:c:\users\lucas\desktop\the-insane-game\src\main.cpp
+1512236539 source:c:\users\lucas\desktop\the-insane-game\src\main.cpp
 	<cmath>
 	<cstdio>
 	<cstdlib>
@@ -1125,6 +1125,7 @@
 	"utils.h"
 	"matrices.h"
 	"arrow.h"
+	"collision.hpp"
 
 1511572168 c:\users\lucas\desktop\the-insane-game\include\glfw\glfw3.h
 	<stddef.h>
@@ -1318,4 +1319,13 @@
 
 1511572168 source:c:\users\lucas\desktop\the-insane-game\src\tiny_obj_loader.cpp
 	"tiny_obj_loader.h"
+
+1512232754 source:c:\users\lucas\desktop\the-insane-game\src\collision.cpp
+	"collision.hpp"
+
+1512232754 c:\users\lucas\desktop\the-insane-game\include\collision.hpp
+	<glm/mat4x4.hpp>
+	<glm/vec4.hpp>
+	<glm/gtc/type_ptr.hpp>
+	<iostream>
 

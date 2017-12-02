@@ -25,6 +25,7 @@ uniform mat4 projection;
 #define AIM  3
 #define ARM 4
 #define BOW 5
+#define ARROW 6
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -81,6 +82,12 @@ void main()
 
     switch(object_id){
 
+        case ARROW:
+            Kd = vec3(0.2f, 0.05f, 0.05f);
+            Ks = vec3(0.0f, 0.0f, 0.0f);
+            Ka = Kd / 2;
+            q = 1.0;
+            break;
         case ARM:
             Kd = vec3(0.9f, 0.4f, 0.3f);
             Ks = vec3(0.0f, 0.0f, 0.0f);

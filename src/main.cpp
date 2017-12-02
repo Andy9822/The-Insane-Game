@@ -52,6 +52,7 @@
 #include "utils.h"
 #include "matrices.h"
 #include "arrow.h"
+#include "collision.hpp"
 
 // === DEFINES ===
     #define DIED camera_position_c.y < -0.5f
@@ -66,6 +67,7 @@
         #define AIM  3
         #define ARM 4
         #define BOW 5
+        #define ARROW 6
 
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
@@ -595,14 +597,35 @@ int main(int argc, char* argv[])
         }
 
         for(unsigned i = 0; i < arrows.size(); i++){
+
             updateArrow(&arrows[i], whileTime);
-            glm::vec4 uNew = -arrows[i].speed/norm(arrows[i].speed);
-            model = Matrix_Translate(arrows[i].pos.x, arrows[i].pos.y, arrows[i].pos.z)
-                    * Matrix_Rotate(arrows[i].phiAngle, crossproduct(camera_up_vector, uNew))
-                    * Matrix_Rotate(arrows[i].thetaAngle, camera_up_vector);
-            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-            glUniform1i(object_id_uniform, AIM);
-            DrawVirtualObject("arrow");
+
+            for(int j = 0; j < (int) cubos.size(); j++)
+            {
+                model = Matrix_Translate(cubos[j].x,cubos[j].y,cubos[j].z)
+                        * Matrix_Scale(cubos[j].dx,cubos[j].dy,cubos[j].dz);
+
+                glm::vec4 bbox_max = model * glm::vec4(g_VirtualScene["cube"].bbox_max.x, g_VirtualScene["cube"].bbox_max.y, g_VirtualScene["cube"].bbox_max.z, 1.0f);
+                glm::vec4 bbox_min = model * glm::vec4(g_VirtualScene["cube"].bbox_min.x, g_VirtualScene["cube"].bbox_min.y, g_VirtualScene["cube"].bbox_min.z, 1.0f);
+
+                // If arrow collides with box
+                if(isPointInsideBBOX(arrows[i].pos, bbox_min, bbox_max)){
+                    engine->play2D("../../audio/arco.mp3", false);
+                    arrows.erase(arrows.begin() + i);
+                }
+                // Otherwise draw the arrow
+                else{
+                    glm::vec4 uNew = crossproduct(camera_up_vector, -arrows[i].speed/norm(arrows[i].speed));
+                    model = Matrix_Translate(arrows[i].pos.x, arrows[i].pos.y, arrows[i].pos.z)
+                            * Matrix_Rotate(arrows[i].phiAngle, uNew)
+                            * Matrix_Rotate(arrows[i].thetaAngle, camera_up_vector);
+                    std::cout << arrows[i].phiAngle << "\n";
+                    std::cout << acos(dotproduct( camera_view_vector/norm(camera_view_vector), glm::vec4(1,0,0,0))) << "\n";
+                    glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+                    glUniform1i(object_id_uniform, ARROW);
+                    DrawVirtualObject("arrow");
+                }
+            }
         }
 
 

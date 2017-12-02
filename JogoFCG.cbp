@@ -68,6 +68,7 @@
 		<Unit filename="include/GLFW/glfw3native.h" />
 		<Unit filename="include/KHR/khrplatform.h" />
 		<Unit filename="include/arrow.h" />
+		<Unit filename="include/collision.hpp" />
 		<Unit filename="include/dejavufont.h" />
 		<Unit filename="include/glad/glad.h" />
 		<Unit filename="include/glm/CMakeLists.txt" />
@@ -337,6 +338,7 @@
 		<Unit filename="include/tiny_obj_loader.h" />
 		<Unit filename="include/utils.h" />
 		<Unit filename="src/arrow.cpp" />
+		<Unit filename="src/collision.cpp" />
 		<Unit filename="src/glad.c">
 			<Option compilerVar="CC" />
 		</Unit>
