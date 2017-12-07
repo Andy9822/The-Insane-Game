@@ -55,19 +55,19 @@
 #include "collision.hpp"
 
 // === DEFINES ===
-    #define DIED camera_position_c.y < -0.5f
-    #define INITIAL_THETA -0.5f
-    #define INITIAL_PHI -0.465
-    #define ALTURAHERO 1.9f
-    #define START_POSITION glm::vec4(14.0f ,2.16f + ALTURAHERO, -26.0f, 1.0f)
+#define DIED camera_position_c.y < -0.5f
+#define INITIAL_THETA -0.5f
+#define INITIAL_PHI -0.465
+#define ALTURAHERO 1.9f
+#define START_POSITION glm::vec4(14.0f ,2.16f + ALTURAHERO, -26.0f, 1.0f)
 
-        #define SPHERE 0
-        #define BUNNY  1
-        #define PLANE  2
-        #define AIM  3
-        #define ARM 4
-        #define BOW 5
-        #define ARROW 6
+#define SPHERE 0
+#define BUNNY  1
+#define PLANE  2
+#define AIM  3
+#define ARM 4
+#define BOW 5
+#define ARROW 6
 
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
@@ -136,6 +136,8 @@ GLuint LoadShader_Fragment(const char* filename); // Carrega um fragment shader
 void LoadShader(const char* filename, GLuint shader_id); // Função utilizada pelas duas acima
 GLuint CreateGpuProgram(GLuint vertex_shader_id, GLuint fragment_shader_id); // Cria um programa de GPU
 void PrintObjModelInfo(ObjModel*); // Função para debugging
+void playGame();
+void menu();
 
 // Declaração de funções auxiliares para renderizar texto dentro da janela
 // OpenGL. Estas funções estão definidas no arquivo "textrendering.cpp".
@@ -233,6 +235,9 @@ double g_LastCursorPosX, g_LastCursorPosY;
 // Número de texturas carregadas pela função LoadTextureImage()
 GLuint g_NumLoadedTextures = 0;
 
+//===============================================================================================================
+///Variaveis para animações
+int stretchCount = 0;
 
 //===============================================================================================================
 ///Variaveis para as teclas de movimentos
@@ -250,6 +255,22 @@ double actualSecond;
 double whileTime;
 unsigned int startFall = 0;
 
+///Variaveis tiradas de serem globais
+bool WASD = false;
+float antigoY = 0;
+float antigoX = 0;
+float antigoZ = 0;
+float novoX;
+float novoZ;
+glm::vec4 nextPosition;
+glm::vec4 camera_view_vector;
+float deslocamento = 1.0f;
+bool charging = false;
+double chargeTime = 0.0f;
+
+glm::vec4 w ;
+glm::vec4 u ;
+
 // "g_LeftMouseButtonPressed = true" se o usuário está com o botão esquerdo do mouse
 // pressionado no momento atual. Veja função MouseButtonCallback().
 bool g_LeftMouseButtonPressed = false;
@@ -265,7 +286,11 @@ float g_CameraDistance = 3.5f; // Distância da câmera para a origema botão do
 glm::vec4 camera_position_c; // Ponto "c", centro da câmera
 glm::vec4 camera_up_vector  = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up"
 
+
+
 using namespace irrklang;
+ISoundEngine* engine;
+GLFWwindow* window;
 int main(int argc, char* argv[])
 {
     // Inicializamos a biblioteca GLFW, utilizada para criar uma janela do
@@ -288,15 +313,12 @@ int main(int argc, char* argv[])
     // funções modernas de OpenGL.
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    // Criamos uma janela do sistema operacional, com 800 colunas e 600 linhas
-    // de pixels, e com título "INF01047".
-
     const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
     glfwWindowHint(GLFW_RED_BITS, mode->redBits);
     glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
     glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
     glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
-    GLFWwindow* window = glfwCreateWindow(mode->width, mode->height, "My Title", NULL, NULL);
+    window = glfwCreateWindow(mode->width, mode->height, "My Title", NULL, NULL);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     if (!window)
     {
@@ -336,9 +358,9 @@ int main(int argc, char* argv[])
 
     printf("GPU: %s, %s, OpenGL %s, GLSL %s\n", vendor, renderer, glversion, glslversion);
 
-    ISoundEngine* engine = createIrrKlangDevice();
+    engine = createIrrKlangDevice();
     if (!engine)
-      return 0; // error starting up the engine
+        return 0; // error starting up the engine
     engine->play2D("../../audio/jogofcg.mp3", true);
 
     // Carregamos os shaders de vértices e de fragmentos que serão utilizados
@@ -364,15 +386,38 @@ int main(int argc, char* argv[])
     ComputeNormals(&planemodel);
     BuildTrianglesAndAddToVirtualScene(&planemodel);
 
+    ObjModel cowmodel("../../data/cow.obj");
+    ComputeNormals(&cowmodel);
+    BuildTrianglesAndAddToVirtualScene(&cowmodel);
+
     ObjModel cubemodel("../../data/cube.obj");
     ComputeNormals(&cubemodel);
     BuildTrianglesAndAddToVirtualScene(&cubemodel);
 
-    ObjModel bowmodel("../../data/Bow.obj");
-    ComputeNormals(&bowmodel);
-    BuildTrianglesAndAddToVirtualScene(&bowmodel);
+    for(int i = 1; i<=9; i++)
+    {
+        std::stringstream sst;
+        sst << i;
+        std::string st = "../../data/bow_anim/bow_stretch_00000" + sst.str() + ".obj";
+        char* fileDir = new char[st.length()];
+        strcpy(fileDir, st.c_str());
+        ObjModel bowmodel(fileDir);
+        ComputeNormals(&bowmodel);
+        BuildTrianglesAndAddToVirtualScene(&bowmodel);
+    }
+    for(int i = 10; i<=20; i++)
+    {
+        std::stringstream sst;
+        sst << i;
+        std::string st = "../../data/bow_anim/bow_stretch_0000" + sst.str() + ".obj";
+        char* fileDir = new char[st.length()];
+        strcpy(fileDir, st.c_str());
+        ObjModel bowmodel(fileDir);
+        ComputeNormals(&bowmodel);
+        BuildTrianglesAndAddToVirtualScene(&bowmodel);
+    }
 
-    ObjModel lefthandmodel("../../data/bow_Hand.obj");
+    ObjModel lefthandmodel("../../data/hand.obj");
     ComputeNormals(&lefthandmodel);
     BuildTrianglesAndAddToVirtualScene(&lefthandmodel);
 
@@ -403,21 +448,104 @@ int main(int argc, char* argv[])
     glm::mat4 the_model;
     glm::mat4 the_view;
 
-    ///Variaveis tiradas de serem globais
-    bool WASD = false;
-    float antigoY = 0;
-    float antigoX = 0;
-    float antigoZ = 0;
-    float novoX;
-    float novoZ;
-    glm::vec4 nextPosition;
-    glm::vec4 camera_view_vector;
-    float deslocamento = 1.0f;
-    bool charging = false;
-    double chargeTime = 0.0f;
+    // TODOOOO
+    menu();
 
-    glm::vec4 w ;
-    glm::vec4 u ;
+    playGame();
+
+    // Finalizamos o uso dos recursos do sistema operacional
+    glfwTerminate();
+
+    // Fim do programa
+    return 0;
+}
+
+void menu()
+{
+
+    while(true)
+    {
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
+        // "Pintamos" todos os pixels do framebuffer com a cor definida acima,
+        // e também resetamos todos os pixels do Z-buffer (depth buffer).
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glUseProgram(program_id);
+        float r = g_CameraDistance;
+        float y = r*sin(g_CameraPhi);
+        float z = r*cos(g_CameraPhi)*cos(g_CameraTheta);
+        float x = r*cos(g_CameraPhi)*sin(g_CameraTheta);
+
+        ///Vetores w u para camera + movimentacao
+        glm::vec4 camera_view_vector = glm::vec4(x,y,z,0.0f); // Vetor "view", sentido para onde a câmera está virada
+        camera_view_vector = camera_view_vector/norm(camera_view_vector);
+        w = -camera_view_vector;
+        u = crossproduct(camera_up_vector, w);
+        w = w/norm(w);
+        u = u/norm(u);
+        glm::vec4 v = crossproduct(w,u);
+
+        // Computamos a matriz "View" utilizando os parâmetros da câmera para
+        // definir o sistema de coordenadas da câmera.  Veja slide 169 do
+        // documento "Aula_08_Sistemas_de_Coordenadas.pdf".
+        glm::mat4 view = Matrix_Camera_View(camera_position_c, camera_view_vector, camera_up_vector);
+
+        // Agora computamos a matriz de Projeção.
+        glm::mat4 projection;
+
+        // Note que, no sistema de coordenadas da câmera, os planos near e far
+        // estão no sentido negativo! Veja slides 198-200 do documento
+        // "Aula_09_Projecoes.pdf".
+        float nearplane = -0.1f;  // Posição do "near plane"
+        float farplane  = -100.0f; // Posição do "far plane"
+
+        if (g_UsePerspectiveProjection)
+        {
+            // Projeção Perspectiva.
+            // Para definição do field of view (FOV), veja slide 234 do
+            // documento "Aula_09_Projecoes.pdf".
+            float field_of_view = 3.141592 / 3.0f;
+            projection = Matrix_Perspective(field_of_view, g_ScreenRatio, nearplane, farplane);
+        }
+        else
+        {
+            // Projeção Ortográfica.
+            // Para definição dos valores l, r, b, t ("left", "right", "bottom", "top"),
+            // veja slide 243 do documento "Aula_09_Projecoes.pdf".
+            // Para simular um "zoom" ortográfico, computamos o valor de "t"
+            // utilizando a variável g_CameraDistance.
+            float t = 1.5f*g_CameraDistance/2.5f;
+            float b = -t;
+            float r = t*g_ScreenRatio;
+            float l = -r;
+            projection = Matrix_Orthographic(l, r, b, t, nearplane, farplane);
+        }
+
+        glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
+        model = Matrix_Translate(1,1,1);
+        // Enviamos as matrizes "view" e "projection" para a placa de vídeo
+        // (GPU). Veja o arquivo "shader_vertex.glsl", onde estas são
+        // efetivamente aplicadas em todos os pontos.
+        glUniformMatrix4fv(view_uniform, 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(projection_uniform, 1, GL_FALSE, glm::value_ptr(projection));
+        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        glUniform1i(object_id_uniform, SPHERE);
+        DrawVirtualObject("cow");
+
+        glfwSwapBuffers(window);
+
+        // Verificamos com o sistema operacional se houve alguma interação do
+        // usuário (teclado, mouse, ...). Caso positivo, as funções de callback
+        // definidas anteriormente usando glfwSet*Callback() serão chamadas
+        // pela biblioteca GLFW.
+        glfwPollEvents();
+    }
+
+}
+
+void playGame()
+{
     std::vector<objeto> cubos =
     {
         {-1.5f, 0.6f, 0.0f, 4.0f, 1.0f, 4.0f},
@@ -428,9 +556,7 @@ int main(int argc, char* argv[])
         {3.5f, 0.9f, -16.5f, 1.9f, 1.0f, 5.0f},
     };
     std::vector<Arrow> arrows;
-
     resetLife(&novoX, &novoZ);
-
     // Ficamos em loop, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
     {
@@ -461,6 +587,7 @@ int main(int argc, char* argv[])
         u = crossproduct(camera_up_vector, w);
         w = w/norm(w);
         u = u/norm(u);
+        glm::vec4 v = crossproduct(w,u);
 
         antigoX = camera_position_c.x;
         antigoZ = camera_position_c.z;
@@ -540,37 +667,60 @@ int main(int argc, char* argv[])
         glUniform1i(object_id_uniform, PLANE);
         DrawVirtualObject("plane");
 
-        model = Matrix_Translate(camera_position_c[0] + camera_view_vector[0],
-                                 camera_position_c[1] + camera_view_vector[1],
-                                 camera_position_c[2] + camera_view_vector[2])
-                * Matrix_Rotate(3.14/6, camera_view_vector)
+        std::stringstream sst;
+        sst << (int) (stretchCount/5)+1;
+        std::string st = "bow_anim" + sst.str();
+        char* bowStretch = new char[st.length()];
+        strcpy(bowStretch, st.c_str());
+
+        glm::vec4 bowPos = 1.5f*camera_view_vector + 0.1f*u + -0.2f*v;
+
+        model = Matrix_Translate(camera_position_c[0] + bowPos[0],
+                                 camera_position_c[1] + bowPos[1],
+                                 camera_position_c[2] + bowPos[2])
+                * Matrix_Rotate(3.14/3 - ((float)stretchCount/(5*19))*(3.14/3), camera_view_vector)
                 * Matrix_Rotate(g_CameraPhi, u)
-                * Matrix_Rotate(3.14/2 + g_CameraTheta + 3.14/16, camera_up_vector)
-                * Matrix_Translate(-0.5, 0, -0.35)
-                * Matrix_Scale(0.5, 0.45, 0.5);
+                * Matrix_Rotate(3.14/2 + g_CameraTheta, camera_up_vector)
+                * Matrix_Scale(0.065, 0.035, 0.065);
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         glUniform1i(object_id_uniform, BOW);
-        DrawVirtualObject("Bow");
+        DrawVirtualObject(bowStretch);
 
-        model = Matrix_Translate(camera_position_c[0] + camera_view_vector[0],
+        /*model = Matrix_Translate(camera_position_c[0] + camera_view_vector[0],
                                  camera_position_c[1] + camera_view_vector[1],
                                  camera_position_c[2] + camera_view_vector[2])
-                * Matrix_Rotate(-3.14/2 + 3.14/10, camera_view_vector)
+                * Matrix_Rotate(3.14/4, camera_view_vector)
                 * Matrix_Rotate(g_CameraPhi, u)
-                * Matrix_Rotate(g_CameraTheta + 3.14, camera_up_vector)
-                * Matrix_Translate(-0.5,0.01,-0.55)
-                * Matrix_Scale(0.01, 0.01, 0.01);
+                * Matrix_Rotate( g_CameraTheta, camera_up_vector)
+                * Matrix_Translate(-0.5, 0.1, -0.4);
+                * Matrix_Scale(0.065, 0.035, 0.065);
+        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        glUniform1i(object_id_uniform, ARROW);
+        DrawVirtualObject("arrow");*/
+
+
+        glm::vec4 handPos = ((float)stretchCount/(5*19)) * 1.5f*camera_view_vector + (1 -((float)stretchCount/(5*19))) * 1.45f*camera_view_vector
+                            + ((float)stretchCount/(5*19)) * 0.0f*u + (1 -((float)stretchCount/(5*19))) * -0.25f*u
+                            + ((float)stretchCount/(5*19)) * -0.55f*v + (1 -((float)stretchCount/(5*19))) * -0.25f*v;
+
+        model =  Matrix_Translate(camera_position_c[0] + handPos[0],
+                                  camera_position_c[1] + handPos[1],
+                                  camera_position_c[2] + handPos[2])
+                 * Matrix_Rotate(-3.14/6- ((float)stretchCount/(5*19))*(3.14/3), camera_view_vector)
+                 * Matrix_Rotate(g_CameraPhi, u)
+                 * Matrix_Rotate(g_CameraTheta + 3.14, camera_up_vector)
+                 * Matrix_Scale(0.009, 0.009, 0.009);
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         glUniform1i(object_id_uniform, ARM);
         DrawVirtualObject("hand");
 
         model = Matrix_Translate(camera_position_c[0] + camera_view_vector[0],
-             camera_position_c[1] + camera_view_vector[1],
-             camera_position_c[2] + camera_view_vector[2])
-             * Matrix_Rotate(g_CameraPhi + 3.14/2, u)
-             * Matrix_Rotate(3.14/2 + g_CameraTheta, camera_up_vector)
-            *Matrix_Scale(0.0075, 1.5, 0.0075);
-        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+                                 camera_position_c[1] + camera_view_vector[1],
+                                 camera_position_c[2] + camera_view_vector[2])
+                * Matrix_Rotate(g_CameraPhi + 3.14/2, u)
+                * Matrix_Rotate(3.14/2 + g_CameraTheta, camera_up_vector)
+                *Matrix_Scale(0.0075, 1.5, 0.0075);
+        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         glUniform1i(object_id_uniform, AIM);
         DrawVirtualObject("plane");
 
@@ -583,11 +733,18 @@ int main(int argc, char* argv[])
             DrawVirtualObject("cube");
         }
 
-        if(g_LeftMouseButtonPressed && !charging){
+        if(charging && (stretchCount/5)+1 < 20)
+        {
+            stretchCount++;
+        }
+        if(g_LeftMouseButtonPressed && !charging)
+        {
             charging = true;
             chargeTime = (glfwGetTime() * 5);
         }
-        if(!g_LeftMouseButtonPressed && charging){
+        if(!g_LeftMouseButtonPressed && charging)
+        {
+            stretchCount = 0;
             charging = false;
             chargeTime = (glfwGetTime() * 5) - chargeTime;
             if(chargeTime > 5.0)
@@ -596,7 +753,8 @@ int main(int argc, char* argv[])
             engine->play2D("../../audio/arco.mp3", false);
         }
 
-        for(unsigned i = 0; i < arrows.size(); i++){
+        for(unsigned i = 0; i < arrows.size(); i++)
+        {
 
             updateArrow(&arrows[i], whileTime);
 
@@ -609,43 +767,24 @@ int main(int argc, char* argv[])
                 glm::vec4 bbox_min = model * glm::vec4(g_VirtualScene["cube"].bbox_min.x, g_VirtualScene["cube"].bbox_min.y, g_VirtualScene["cube"].bbox_min.z, 1.0f);
 
                 // If arrow collides with box
-                if(isPointInsideBBOX(arrows[i].pos, bbox_min, bbox_max)){
+                if(isPointInsideBBOX(arrows[i].pos, bbox_min, bbox_max))
+                {
                     engine->play2D("../../audio/arco.mp3", false);
                     arrows.erase(arrows.begin() + i);
                 }
                 // Otherwise draw the arrow
-                else{
+                else
+                {
                     glm::vec4 uNew = crossproduct(camera_up_vector, -arrows[i].speed/norm(arrows[i].speed));
                     model = Matrix_Translate(arrows[i].pos.x, arrows[i].pos.y, arrows[i].pos.z)
                             * Matrix_Rotate(arrows[i].phiAngle, uNew)
                             * Matrix_Rotate(arrows[i].thetaAngle, camera_up_vector);
-                    std::cout << arrows[i].phiAngle << "\n";
-                    std::cout << acos(dotproduct( camera_view_vector/norm(camera_view_vector), glm::vec4(1,0,0,0))) << "\n";
                     glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
                     glUniform1i(object_id_uniform, ARROW);
                     DrawVirtualObject("arrow");
                 }
             }
         }
-
-
-        // Pegamos um vértice com coordenadas de modelo (0.5, 0.5, 0.5, 1) e o
-        // passamos por todos os sistemas de coordenadas armazenados nas
-        // matrizes the_model, the_view, e the_projection; e escrevemos na tela
-        // as matrizes e pontos resultantes dessas transformações.
-        //glm::vec4 p_model(0.5f, 0.5f, 0.5f, 1.0f);
-        //TextRendering_ShowModelViewProjection(window, projection, view, model, p_model);
-
-        // Imprimimos na tela os ângulos de Euler que controlam a rotação do
-        // terceiro cubo.
-        TextRendering_ShowEulerAngles(window);
-
-        // Imprimimos na informação sobre a matriz de projeção sendo utilizada.
-        TextRendering_ShowProjection(window);
-
-        // Imprimimos na tela informação sobre o número de quadros renderizados
-        // por segundo (frames per second).
-        TextRendering_ShowFramesPerSecond(window);
 
         // O framebuffer onde OpenGL executa as operações de renderização não
         // é o mesmo que está sendo mostrado para o usuário, caso contrário
@@ -662,14 +801,7 @@ int main(int argc, char* argv[])
         glfwPollEvents();
 
         whileTime = (glfwGetTime() * 10) - actualSecond;
-
     }
-
-    // Finalizamos o uso dos recursos do sistema operacional
-    glfwTerminate();
-
-    // Fim do programa
-    return 0;
 }
 
 // Função que carrega uma imagem para ser utilizada como textura
@@ -1258,7 +1390,7 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 // cima da janela OpenGL.
 void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 {
-  // Abaixo executamos o seguinte: caso o botão esquerdo do mouse esteja
+    // Abaixo executamos o seguinte: caso o botão esquerdo do mouse esteja
     // pressionado, computamos quanto que o mouse se movimento desde o último
     // instante de tempo, e usamos esta movimentação para atualizar os
     // parâmetros que definem a posição da câmera dentro da cena virtual.
@@ -1267,28 +1399,29 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
     //if (g_LeftMouseButtonPressed)
     //{
 
-        // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
-        float dx = xpos - g_LastCursorPosX;
-        float dy = ypos - g_LastCursorPosY;
+    // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
+    float dx = xpos - g_LastCursorPosX;
+    float dy = ypos - g_LastCursorPosY;
 
-        // Atualizamos parâmetros da câmera com os deslocamentos
-        g_CameraTheta -= 0.005f*dx;
-        g_CameraPhi   -= 0.005f*dy;
+    // Atualizamos parâmetros da câmera com os deslocamentos
+    g_CameraTheta -= 0.005f*dx;
+    g_CameraPhi   -= 0.005f*dy;
 
-        // Em coordenadas esféricas, o ângulo phi deve ficar entre -pi/2 e +pi/2.
-        float phimax = 3.141592f/2;
-        float phimin = -phimax;
+    // Em coordenadas esféricas, o ângulo phi deve ficar entre -pi/2 e +pi/2.
+    float phimax = 3.141592f/2;
+    float phimin = -phimax;
 
-        if (g_CameraPhi > phimax){
-            g_CameraPhi = phimax;
-        }
-        if (g_CameraPhi < phimin)
-            g_CameraPhi = phimin;
+    if (g_CameraPhi > phimax)
+    {
+        g_CameraPhi = phimax;
+    }
+    if (g_CameraPhi < phimin)
+        g_CameraPhi = phimin;
 
-        // Atualizamos as variáveis globais para armazenar a posição atual do
-        // cursor como sendo a última posição conhecida do cursor.
-        g_LastCursorPosX = xpos;
-        g_LastCursorPosY = ypos;
+    // Atualizamos as variáveis globais para armazenar a posição atual do
+    // cursor como sendo a última posição conhecida do cursor.
+    g_LastCursorPosX = xpos;
+    g_LastCursorPosY = ypos;
     //}
 
     if (g_RightMouseButtonPressed)
@@ -1345,7 +1478,7 @@ void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 // tecla do teclado. Veja http://www.glfw.org/docs/latest/input_guide.html#input_key
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
 {
-       // Se o usuário pressionar a tecla ESC, fechamos a janela.
+    // Se o usuário pressionar a tecla ESC, fechamos a janela.
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
 
