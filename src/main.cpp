@@ -137,7 +137,7 @@ void LoadShader(const char* filename, GLuint shader_id); // Função utilizada p
 GLuint CreateGpuProgram(GLuint vertex_shader_id, GLuint fragment_shader_id); // Cria um programa de GPU
 void PrintObjModelInfo(ObjModel*); // Função para debugging
 void playGame();
-void menu();
+int menu();
 
 // Declaração de funções auxiliares para renderizar texto dentro da janela
 // OpenGL. Estas funções estão definidas no arquivo "textrendering.cpp".
@@ -255,6 +255,8 @@ double actualSecond;
 double whileTime;
 unsigned int startFall = 0;
 
+bool enterPressed = false;
+
 ///Variaveis tiradas de serem globais
 bool WASD = false;
 float antigoY = 0;
@@ -267,6 +269,7 @@ glm::vec4 camera_view_vector;
 float deslocamento = 1.0f;
 bool charging = false;
 double chargeTime = 0.0f;
+bool arrowReplaced = true;
 
 glm::vec4 w ;
 glm::vec4 u ;
@@ -283,7 +286,7 @@ float g_CameraTheta = 0.0f; // Ângulo no plano ZX em relação ao eixo Z
 float g_CameraPhi = 0.0f;   // Ângulo em relação ao eixo Y
 float g_CameraDistance = 3.5f; // Distância da câmera para a origema botão do meio do mouse
 
-glm::vec4 camera_position_c; // Ponto "c", centro da câmera
+glm::vec4 camera_position_c = glm::vec4(0.0f,0.0f,0.0f,1.0f); // Ponto "c", centro da câmera
 glm::vec4 camera_up_vector  = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up"
 
 
@@ -372,6 +375,8 @@ int main(int argc, char* argv[])
     // Carregamos duas imagens para serem utilizadas como textura
     LoadTextureImage("../../data/tc-earth_daymap_surface.jpg");      // TextureImage0
     LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif"); // TextureImage1
+    LoadTextureImage("../../data/skin.jpg");      // TextureImage2
+    LoadTextureImage("../../data/beach-wood--texture.jpg");      // TextureImage3
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     ObjModel spheremodel("../../data/sphere.obj");
@@ -460,11 +465,55 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-void menu()
+int menu()
 {
+    int selectionTime = 0;
 
-    while(true)
+    float startPos = -0.5f;
+    float startSize = 2.5f;
+    float optionPos = -0.65f;
+    float optionSize = 1.0f;
+    float instructionPos = -0.8f;
+    float instructionSize = 1.0f;
+
+    int selectPos = 0;
+
+    while(!enterPressed)
     {
+        selectionTime++;
+        if(selectionTime == 5){
+            selectionTime = 0;
+        }
+
+        if(selectionTime == 0){
+            if(pressW && selectPos > 0){
+                selectPos--;
+            }
+            if(pressS && selectPos < 2){
+                selectPos++;
+            }
+
+            switch(selectPos){
+            case 0:
+                startSize = 2.5f;
+                optionSize = 1.0f;
+                instructionSize = 1.0f;
+                break;
+            case 1:
+                startSize = 1.0f;
+                optionSize = 2.5f;
+                instructionSize = 1.0f;
+                break;
+            case 2:
+                startSize = 1.0f;
+                optionSize = 1.0f;
+                instructionSize = 2.5f;
+                break;
+            default:
+                break;
+            }
+        }
+
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
         // "Pintamos" todos os pixels do framebuffer com a cor definida acima,
@@ -478,7 +527,10 @@ void menu()
         float x = r*cos(g_CameraPhi)*sin(g_CameraTheta);
 
         ///Vetores w u para camera + movimentacao
-        glm::vec4 camera_view_vector = glm::vec4(x,y,z,0.0f); // Vetor "view", sentido para onde a câmera está virada
+
+
+        glm::vec4 camera_view_vector = glm::vec4(x,y,z,0.0f);
+        // Vetor "view", sentido para onde a câmera está virada
         camera_view_vector = camera_view_vector/norm(camera_view_vector);
         w = -camera_view_vector;
         u = crossproduct(camera_up_vector, w);
@@ -523,7 +575,9 @@ void menu()
         }
 
         glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
-        model = Matrix_Translate(1,1,1);
+        model = Matrix_Translate(camera_position_c[0],
+                                 camera_position_c[1],
+                                 camera_position_c[2] + 2);
         // Enviamos as matrizes "view" e "projection" para a placa de vídeo
         // (GPU). Veja o arquivo "shader_vertex.glsl", onde estas são
         // efetivamente aplicadas em todos os pontos.
@@ -533,7 +587,12 @@ void menu()
         glUniform1i(object_id_uniform, SPHERE);
         DrawVirtualObject("cow");
 
+        TextRendering_PrintString(window, "Start", 0.0f, startPos, startSize);
+        TextRendering_PrintString(window, "Options", 0.0f, optionPos, optionSize);
+        TextRendering_PrintString(window, "Instructions", 0.0f, instructionPos, instructionSize);
+
         glfwSwapBuffers(window);
+
 
         // Verificamos com o sistema operacional se houve alguma interação do
         // usuário (teclado, mouse, ...). Caso positivo, as funções de callback
@@ -542,10 +601,15 @@ void menu()
         glfwPollEvents();
     }
 
+    return selectPos;
+
 }
+
 
 void playGame()
 {
+    int arrowRateController = 0;
+    enterPressed = false;
     std::vector<objeto> cubos =
     {
         {-1.5f, 0.6f, 0.0f, 4.0f, 1.0f, 4.0f},
@@ -636,156 +700,169 @@ void playGame()
             float l = -r;
             projection = Matrix_Orthographic(l, r, b, t, nearplane, farplane);
         }
+        if(DIED && !enterPressed){
+          TextRendering_PrintString(window, "YOU DIED", -0.5f, 0.0f, 5.0f);
+          TextRendering_PrintString(window, "Press enter to continue...", -0.5f, -0.5f, 1.0f);
+        }
+        else{
 
-        glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
+          glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
 
-        // Enviamos as matrizes "view" e "projection" para a placa de vídeo
-        // (GPU). Veja o arquivo "shader_vertex.glsl", onde estas são
-        // efetivamente aplicadas em todos os pontos.
-        glUniformMatrix4fv(view_uniform, 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(projection_uniform, 1, GL_FALSE, glm::value_ptr(projection));
+          // Enviamos as matrizes "view" e "projection" para a placa de vídeo
+          // (GPU). Veja o arquivo "shader_vertex.glsl", onde estas são
+          // efetivamente aplicadas em todos os pontos.
+          glUniformMatrix4fv(view_uniform, 1, GL_FALSE, glm::value_ptr(view));
+          glUniformMatrix4fv(projection_uniform, 1, GL_FALSE, glm::value_ptr(projection));
 
-        // Desenhamos o modelo da esfera
-        model = Matrix_Translate(-1.0f,0.0f,0.0f)
-                * Matrix_Rotate_Z(0.6f)
-                * Matrix_Rotate_X(0.2f)
-                * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1i(object_id_uniform, SPHERE);
-        DrawVirtualObject("sphere");
+          // Desenhamos o modelo da esfera
+          model = Matrix_Translate(-1.0f,0.0f,0.0f)
+                  * Matrix_Rotate_Z(0.6f)
+                  * Matrix_Rotate_X(0.2f)
+                  * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
+          glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+          glUniform1i(object_id_uniform, SPHERE);
+          DrawVirtualObject("sphere");
 
-        // Desenhamos o modelo do coelho
-        model = Matrix_Translate(1.0f,0.0f,0.0f)
-                * Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f);
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1i(object_id_uniform, BUNNY);
-        DrawVirtualObject("bunny");
+          // Desenhamos o modelo do coelho
+          model = Matrix_Translate(1.0f,0.0f,0.0f)
+                  * Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f);
+          glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+          glUniform1i(object_id_uniform, BUNNY);
+          DrawVirtualObject("bunny");
 
-        model = Matrix_Translate(0.0f,-1.0f,0.0f)
-                * Matrix_Scale(100.0, 1.0, 100.0);
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1i(object_id_uniform, PLANE);
-        DrawVirtualObject("plane");
+          model = Matrix_Translate(0.0f,-1.0f,0.0f)
+                  * Matrix_Scale(100.0, 1.0, 100.0);
+          glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+          glUniform1i(object_id_uniform, PLANE);
+          DrawVirtualObject("plane");
 
-        std::stringstream sst;
-        sst << (int) (stretchCount/5)+1;
-        std::string st = "bow_anim" + sst.str();
-        char* bowStretch = new char[st.length()];
-        strcpy(bowStretch, st.c_str());
+          std::stringstream sst;
+          sst << (int) (stretchCount/5)+1;
+          std::string st = "bow_anim" + sst.str();
+          char* bowStretch = new char[st.length()];
+          strcpy(bowStretch, st.c_str());
 
-        glm::vec4 bowPos = 1.5f*camera_view_vector + 0.1f*u + -0.2f*v;
+          glm::vec4 bowPos = 1.5f*camera_view_vector + 0.15f*u + -0.2f*v;
 
-        model = Matrix_Translate(camera_position_c[0] + bowPos[0],
-                                 camera_position_c[1] + bowPos[1],
-                                 camera_position_c[2] + bowPos[2])
-                * Matrix_Rotate(3.14/3 - ((float)stretchCount/(5*19))*(3.14/3), camera_view_vector)
-                * Matrix_Rotate(g_CameraPhi, u)
-                * Matrix_Rotate(3.14/2 + g_CameraTheta, camera_up_vector)
-                * Matrix_Scale(0.065, 0.035, 0.065);
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1i(object_id_uniform, BOW);
-        DrawVirtualObject(bowStretch);
+          model = Matrix_Translate(camera_position_c[0] + bowPos[0],
+                                   camera_position_c[1] + bowPos[1],
+                                   camera_position_c[2] + bowPos[2])
+                  * Matrix_Rotate(3.14/3 - ((float)stretchCount/(5*19))*(3.14/3), camera_view_vector)
+                  * Matrix_Rotate(g_CameraPhi, u)
+                  * Matrix_Rotate(3.14/2 + g_CameraTheta, camera_up_vector)
+                  * Matrix_Scale(0.065, 0.035, 0.065);
+          glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+          glUniform1i(object_id_uniform, BOW);
+          DrawVirtualObject(bowStretch);
 
-        /*model = Matrix_Translate(camera_position_c[0] + camera_view_vector[0],
-                                 camera_position_c[1] + camera_view_vector[1],
-                                 camera_position_c[2] + camera_view_vector[2])
-                * Matrix_Rotate(3.14/4, camera_view_vector)
-                * Matrix_Rotate(g_CameraPhi, u)
-                * Matrix_Rotate( g_CameraTheta, camera_up_vector)
-                * Matrix_Translate(-0.5, 0.1, -0.4);
-                * Matrix_Scale(0.065, 0.035, 0.065);
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1i(object_id_uniform, ARROW);
-        DrawVirtualObject("arrow");*/
+          glm::vec4 handPos =   ((float)stretchCount/(5*19)) * 1.5f*camera_view_vector + (1 -((float)stretchCount/(5*19))) * 1.45f*camera_view_vector
+                              + ((float)stretchCount/(5*19)) * 0.05f*u + (1 -((float)stretchCount/(5*19))) * -0.3f*u
+                              + ((float)stretchCount/(5*19)) * -0.55f*v + (1 -((float)stretchCount/(5*19))) * -0.3f*v;
 
+          model =  Matrix_Translate(camera_position_c[0] + handPos[0],
+                                    camera_position_c[1] + handPos[1],
+                                    camera_position_c[2] + handPos[2])
+                   * Matrix_Rotate(-3.14/6- ((float)stretchCount/(5*19))*(3.14/3), camera_view_vector)
+                   * Matrix_Rotate(g_CameraPhi, u)
+                   * Matrix_Rotate(g_CameraTheta + 3.14, camera_up_vector)
+                   * Matrix_Scale(0.009, 0.009, 0.009);
+          glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+          glUniform1i(object_id_uniform, ARM);
+          DrawVirtualObject("hand");
 
-        glm::vec4 handPos = ((float)stretchCount/(5*19)) * 1.5f*camera_view_vector + (1 -((float)stretchCount/(5*19))) * 1.45f*camera_view_vector
-                            + ((float)stretchCount/(5*19)) * 0.0f*u + (1 -((float)stretchCount/(5*19))) * -0.25f*u
-                            + ((float)stretchCount/(5*19)) * -0.55f*v + (1 -((float)stretchCount/(5*19))) * -0.25f*v;
+          model = Matrix_Translate(camera_position_c[0] + camera_view_vector[0],
+                                   camera_position_c[1] + camera_view_vector[1],
+                                   camera_position_c[2] + camera_view_vector[2])
+                  * Matrix_Rotate(g_CameraPhi + 3.14/2, u)
+                  * Matrix_Rotate(3.14/2 + g_CameraTheta, camera_up_vector)
+                  *Matrix_Scale(0.0075, 1.5, 0.0075);
+          glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+          glUniform1i(object_id_uniform, AIM);
+          DrawVirtualObject("plane");
 
-        model =  Matrix_Translate(camera_position_c[0] + handPos[0],
-                                  camera_position_c[1] + handPos[1],
-                                  camera_position_c[2] + handPos[2])
-                 * Matrix_Rotate(-3.14/6- ((float)stretchCount/(5*19))*(3.14/3), camera_view_vector)
-                 * Matrix_Rotate(g_CameraPhi, u)
-                 * Matrix_Rotate(g_CameraTheta + 3.14, camera_up_vector)
-                 * Matrix_Scale(0.009, 0.009, 0.009);
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1i(object_id_uniform, ARM);
-        DrawVirtualObject("hand");
+          for(int i = 0; i < (int) cubos.size(); i++)
+          {
+              model = Matrix_Translate(cubos[i].x,cubos[i].y,cubos[i].z)
+                      * Matrix_Scale(cubos[i].dx,cubos[i].dy,cubos[i].dz);
+              glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+              glUniform1i(object_id_uniform, AIM);
+              DrawVirtualObject("cube");
+          }
 
-        model = Matrix_Translate(camera_position_c[0] + camera_view_vector[0],
-                                 camera_position_c[1] + camera_view_vector[1],
-                                 camera_position_c[2] + camera_view_vector[2])
-                * Matrix_Rotate(g_CameraPhi + 3.14/2, u)
-                * Matrix_Rotate(3.14/2 + g_CameraTheta, camera_up_vector)
-                *Matrix_Scale(0.0075, 1.5, 0.0075);
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1i(object_id_uniform, AIM);
-        DrawVirtualObject("plane");
+          if(charging && (stretchCount/5)+1 < 20)
+          {
+              stretchCount++;
+          }
+          if(g_LeftMouseButtonPressed && !charging && arrowReplaced)
+          {
+              charging = true;
+              chargeTime = (glfwGetTime() * 5);
+          }
+          if(!g_LeftMouseButtonPressed && charging && arrowReplaced)
+          {
+              arrowReplaced = false;
+              arrowRateController = 50;
+              stretchCount = 0;
+              charging = false;
+              chargeTime = (glfwGetTime() * 5) - chargeTime;
+              if(chargeTime > 5.0)
+                  chargeTime = 5.0;
+              arrows.push_back(Arrow(camera_position_c, (float)chargeTime*camera_view_vector, g_CameraTheta, g_CameraPhi));
+              engine->play2D("../../audio/arco.mp3", false);
+          }
 
-        for(int i = 0; i < (int) cubos.size(); i++)
-        {
-            model = Matrix_Translate(cubos[i].x,cubos[i].y,cubos[i].z)
-                    * Matrix_Scale(cubos[i].dx,cubos[i].dy,cubos[i].dz);
+          if(arrowRateController < 0){
+
+            arrowReplaced = true;
+            glm::vec4 arrowPos =  ((float)stretchCount/(5*19)) * 1.0f*camera_view_vector + (1 -((float)stretchCount/(5*19))) * 2.0f*camera_view_vector
+                                + ((float)stretchCount/(5*19)) * 0.15f*u + (1 -((float)stretchCount/(5*19))) * 0.06f*u
+                                + ((float)stretchCount/(5*19)) * -0.25f*v + (1 -((float)stretchCount/(5*19))) * -0.15f*v;
+
+            model = Matrix_Translate(camera_position_c[0] + arrowPos[0],
+                                     camera_position_c[1] + arrowPos[1],
+                                     camera_position_c[2] + arrowPos[2])
+                    * Matrix_Rotate(3.14/4, camera_view_vector)
+                    * Matrix_Rotate(g_CameraPhi, u)
+                    * Matrix_Rotate( g_CameraTheta + 3.14/24, camera_up_vector)
+                    * Matrix_Scale(1, 1, 1);
             glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-            glUniform1i(object_id_uniform, AIM);
-            DrawVirtualObject("cube");
+            glUniform1i(object_id_uniform, ARROW);
+            DrawVirtualObject("arrow");
+          }
+
+          for(unsigned i = 0; i < arrows.size(); i++)
+          {
+              updateArrow(&arrows[i], whileTime);
+
+              for(int j = 0; j < (int) cubos.size(); j++)
+              {
+                  model = Matrix_Translate(cubos[j].x,cubos[j].y,cubos[j].z)
+                          * Matrix_Scale(cubos[j].dx,cubos[j].dy,cubos[j].dz);
+
+                  glm::vec4 bbox_max = model * glm::vec4(g_VirtualScene["cube"].bbox_max.x, g_VirtualScene["cube"].bbox_max.y, g_VirtualScene["cube"].bbox_max.z, 1.0f);
+                  glm::vec4 bbox_min = model * glm::vec4(g_VirtualScene["cube"].bbox_min.x, g_VirtualScene["cube"].bbox_min.y, g_VirtualScene["cube"].bbox_min.z, 1.0f);
+
+                  // If arrow collides with box
+                  if(isPointInsideBBOX(arrows[i].pos, bbox_min, bbox_max))
+                  {
+                      engine->play2D("../../audio/arco.mp3", false);
+                      arrows.erase(arrows.begin() + i);
+                  }
+                  // Otherwise draw the arrow
+                  else
+                  {
+                      glm::vec4 uNew = crossproduct(camera_up_vector, -arrows[i].speed/norm(arrows[i].speed));
+                      model = Matrix_Translate(arrows[i].pos.x, arrows[i].pos.y, arrows[i].pos.z)
+                              * Matrix_Rotate(arrows[i].phiAngle, uNew)
+                              * Matrix_Rotate(arrows[i].thetaAngle, camera_up_vector);
+                      glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+                      glUniform1i(object_id_uniform, ARROW);
+                      DrawVirtualObject("arrow");
+                  }
+              }
+          }
+
         }
-
-        if(charging && (stretchCount/5)+1 < 20)
-        {
-            stretchCount++;
-        }
-        if(g_LeftMouseButtonPressed && !charging)
-        {
-            charging = true;
-            chargeTime = (glfwGetTime() * 5);
-        }
-        if(!g_LeftMouseButtonPressed && charging)
-        {
-            stretchCount = 0;
-            charging = false;
-            chargeTime = (glfwGetTime() * 5) - chargeTime;
-            if(chargeTime > 5.0)
-                chargeTime = 5.0;
-            arrows.push_back(Arrow(camera_position_c, (float)chargeTime*camera_view_vector, g_CameraTheta, g_CameraPhi));
-            engine->play2D("../../audio/arco.mp3", false);
-        }
-
-        for(unsigned i = 0; i < arrows.size(); i++)
-        {
-
-            updateArrow(&arrows[i], whileTime);
-
-            for(int j = 0; j < (int) cubos.size(); j++)
-            {
-                model = Matrix_Translate(cubos[j].x,cubos[j].y,cubos[j].z)
-                        * Matrix_Scale(cubos[j].dx,cubos[j].dy,cubos[j].dz);
-
-                glm::vec4 bbox_max = model * glm::vec4(g_VirtualScene["cube"].bbox_max.x, g_VirtualScene["cube"].bbox_max.y, g_VirtualScene["cube"].bbox_max.z, 1.0f);
-                glm::vec4 bbox_min = model * glm::vec4(g_VirtualScene["cube"].bbox_min.x, g_VirtualScene["cube"].bbox_min.y, g_VirtualScene["cube"].bbox_min.z, 1.0f);
-
-                // If arrow collides with box
-                if(isPointInsideBBOX(arrows[i].pos, bbox_min, bbox_max))
-                {
-                    engine->play2D("../../audio/arco.mp3", false);
-                    arrows.erase(arrows.begin() + i);
-                }
-                // Otherwise draw the arrow
-                else
-                {
-                    glm::vec4 uNew = crossproduct(camera_up_vector, -arrows[i].speed/norm(arrows[i].speed));
-                    model = Matrix_Translate(arrows[i].pos.x, arrows[i].pos.y, arrows[i].pos.z)
-                            * Matrix_Rotate(arrows[i].phiAngle, uNew)
-                            * Matrix_Rotate(arrows[i].thetaAngle, camera_up_vector);
-                    glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-                    glUniform1i(object_id_uniform, ARROW);
-                    DrawVirtualObject("arrow");
-                }
-            }
-        }
-
         // O framebuffer onde OpenGL executa as operações de renderização não
         // é o mesmo que está sendo mostrado para o usuário, caso contrário
         // seria possível ver artefatos conhecidos como "screen tearing". A
@@ -801,6 +878,8 @@ void playGame()
         glfwPollEvents();
 
         whileTime = (glfwGetTime() * 10) - actualSecond;
+
+        arrowRateController--;
     }
 }
 
@@ -1492,6 +1571,11 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
 
     float delta = 3.141592 / 16; // 22.5 graus, em radianos.
 
+    if (key == GLFW_KEY_ENTER && action == GLFW_PRESS)
+    {
+      enterPressed = true;
+    }
+
     if (key == GLFW_KEY_X && action == GLFW_PRESS)
     {
         g_AngleX += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
@@ -2097,8 +2181,9 @@ void processaMovimentos(bool WASD,float antigoX,float * novoX,float antigoZ,floa
         }
         processaColisao(*novoX,antigoY,*novoZ,&invadiuObjeto,cubos);
 
-        if(DIED)
+        if(DIED && enterPressed)
         {
+            enterPressed = false;
             resetLife(novoX,novoZ);
             CAINDO = false;
         }
