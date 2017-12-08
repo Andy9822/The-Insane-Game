@@ -8,6 +8,6 @@
 void updateArrow(Arrow *arrow, float timeElapsed){
 
     arrow->pos += arrow->speed * timeElapsed;
-    arrow->speed += glm::vec4(0.0f, -0.02f, 0.0f, 0.0f) * timeElapsed;
+    arrow->speed += glm::vec4(0.0f, -0.1f, 0.0f, 0.0f) * timeElapsed;
 
 }

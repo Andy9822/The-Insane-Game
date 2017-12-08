@@ -632,7 +632,7 @@ void playGame()
 
     ArrowType arrowType = normal;
     glm::vec4 teleportPosition = camera_position_c;
-    glm::vec4 plataformPosition;
+    glm::vec4 plataformPosition = camera_position_c - 100.f*camera_up_vector;
 
     // Ficamos em loop, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
@@ -832,7 +832,7 @@ void playGame()
           if(g_LeftMouseButtonPressed && !charging && arrowReplaced)
           {
               charging = true;
-              chargeTime = (glfwGetTime() * 5);
+              chargeTime = (glfwGetTime() * 10);
           }
           if(!g_LeftMouseButtonPressed && charging && arrowReplaced)
           {
@@ -840,9 +840,9 @@ void playGame()
               arrowRateController = 50;
               stretchCount = 0;
               charging = false;
-              chargeTime = (glfwGetTime() * 5) - chargeTime;
-              if(chargeTime > 5.0)
-                  chargeTime = 5.0;
+              chargeTime = (glfwGetTime() * 10) - chargeTime;
+              if(chargeTime > 10.0)
+                  chargeTime = 10.0;
               arrows.push_back(Arrow(camera_position_c, (float)chargeTime*camera_view_vector, g_CameraTheta, g_CameraPhi));
               if(arrowType == teleport){
                   arrows[arrows.size()-1].type = teleport;
@@ -876,9 +876,6 @@ void playGame()
                 glUniform1i(object_id_uniform, ARROW);
             DrawVirtualObject("arrow");
           }
-
-          if(arrows.size() > 5)
-              arrows.erase(arrows.begin()+5, arrows.end());
 
           for(unsigned i = 0; i < arrows.size(); i++)
           {
