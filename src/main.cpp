@@ -68,6 +68,8 @@
 #define ARM 4
 #define BOW 5
 #define ARROW 6
+#define ARROWT 7
+#define ARROWP 8
 
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
@@ -110,7 +112,7 @@ struct SceneObject
 };
 
 ///Struct para as plataformas contendo os pontos xyz e escalacao de cada um
-typedef struct
+struct Cubo
 {
     float x;
     float y;
@@ -118,7 +120,11 @@ typedef struct
     float dx;
     float dy;
     float dz;
-} objeto;
+
+    Cubo(float x1, float y1, float z1, float dx1, float dy1, float dz1){
+        x = x1; y = y1; z = z1; dx = dx1; dy = dx1; dz = dz1;
+    }
+};
 
 // Declaração de funções utilizadas para pilha de matrizes de modelagem.
 void PushMatrix(glm::mat4 M);
@@ -172,13 +178,13 @@ bool entreLimites(float posCamera, float eixo, float delta,float erro);
 bool caiuDemais(float antigoEixo,float novoEixo, float posEixo, float delta, float erro);
 void processaWASD(float *novoX,float antigoX,float *novoZ,float antigoZ,float deslocamento,glm::vec4 u,glm::vec4 w);
 void atualizaPulo();
-void testaChao(float novoX,float novoZ,unsigned int *startFall,unsigned int actualSecond,std::vector<objeto> cubos);
-void trataColisaoCubo(float novoX,float antigoY,float novoZ, int nearest,bool *invadiuObjeto,std::vector<objeto> cubos);
+void testaChao(float novoX,float novoZ,unsigned int *startFall,unsigned int actualSecond,std::vector<Cubo> cubos);
+void trataColisaoCubo(float novoX,float antigoY,float novoZ, int nearest,bool *invadiuObjeto,std::vector<Cubo> cubos);
 bool processaPouso(float antigoY,float cuboY,float cuboDY,float correcao);
-void processaMovimentos(bool WASD,float antigoX,float *novoX,float antigoZ,float *novoZ,float antigoY,std::vector<objeto> cubos);
+void processaMovimentos(bool WASD,float antigoX,float *novoX,float antigoZ,float *novoZ,float antigoY,std::vector<Cubo> cubos);
 void aplicaGravidade();
-void processaColisao(float novoX,float antigoY,float novoZ,bool *invadiuObjeto,std::vector<objeto> cubos);
-int cuboProximo(float novoX,float antigoY,float novoZ,std::vector<objeto> cubos);
+void processaColisao(float novoX,float antigoY,float novoZ,bool *invadiuObjeto,std::vector<Cubo> cubos);
+int cuboProximo(float novoX,float antigoY,float novoZ,std::vector<Cubo> cubos);
 void resetLife(float *novoX,float *novoZ);
 
 // Variáveis que definem um programa de GPU (shaders). Veja função LoadShadersFromFiles().
@@ -245,6 +251,8 @@ bool pressW = false;
 bool pressS = false;
 bool pressA = false;
 bool pressD = false;
+bool pressT = false;
+bool pressR = false;
 bool pressSpace = false;
 bool JUMPING = false;
 bool CAINDO = false;
@@ -289,11 +297,10 @@ float g_CameraDistance = 3.5f; // Distância da câmera para a origema botão do
 glm::vec4 camera_position_c = glm::vec4(0.0f,0.0f,0.0f,1.0f); // Ponto "c", centro da câmera
 glm::vec4 camera_up_vector  = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up"
 
-
-
 using namespace irrklang;
 ISoundEngine* engine;
 GLFWwindow* window;
+
 int main(int argc, char* argv[])
 {
     // Inicializamos a biblioteca GLFW, utilizada para criar uma janela do
@@ -364,7 +371,7 @@ int main(int argc, char* argv[])
     engine = createIrrKlangDevice();
     if (!engine)
         return 0; // error starting up the engine
-    engine->play2D("../../audio/jogofcg.mp3", true);
+    //engine->play2D("../../audio/jogofcg.mp3", true);
 
     // Carregamos os shaders de vértices e de fragmentos que serão utilizados
     // para renderização. Veja slide 217 e 219 do documento no Moodle
@@ -453,7 +460,6 @@ int main(int argc, char* argv[])
     glm::mat4 the_model;
     glm::mat4 the_view;
 
-    // TODOOOO
     menu();
 
     playGame();
@@ -610,17 +616,24 @@ void playGame()
 {
     int arrowRateController = 0;
     enterPressed = false;
-    std::vector<objeto> cubos =
-    {
-        {-1.5f, 0.6f, 0.0f, 4.0f, 1.0f, 4.0f},
-        {4.0f, 1.2f, 0.0f, 4.0f, 4.0f, 4.0f},
-        {7.5f, 0.12f, -7.5f, 4.0f, 4.0f, 4.0f},
-        {14.0f, 0.16f, -20.5f, 4.0f, 4.0f, 12.0f},
-        {7.5f, 0.9f, -20.5f, 5.0f, 1.0f, 1.9f},
-        {3.5f, 0.9f, -16.5f, 1.9f, 1.0f, 5.0f},
-    };
+    std::vector<Cubo> cubos;
+    cubos.push_back(Cubo(-1.5f, 0.6f, 0.0f, 4.0f, 1.0f, 4.0f));
+    cubos.push_back(Cubo(4.0f, 1.2f, 0.0f, 4.0f, 4.0f, 4.0f));
+    cubos.push_back(Cubo(7.5f, 0.12f, -7.5f, 4.0f, 4.0f, 4.0f));
+    cubos.push_back(Cubo(14.0f, 0.16f, -20.5f, 4.0f, 4.0f, 12.0f));
+    cubos.push_back(Cubo(7.5f, 0.9f, -20.5f, 5.0f, 1.0f, 1.9f));
+    cubos.push_back(Cubo(3.5f, 0.9f, -16.5f, 1.9f, 1.0f, 5.0f));
+
+    cubos.push_back(Cubo(0,0,0,1,1,1)); // Cubo usado para criar plataforma
+
     std::vector<Arrow> arrows;
+
     resetLife(&novoX, &novoZ);
+
+    ArrowType arrowType = normal;
+    glm::vec4 teleportPosition = camera_position_c;
+    glm::vec4 plataformPosition;
+
     // Ficamos em loop, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
     {
@@ -788,6 +801,29 @@ void playGame()
               glUniform1i(object_id_uniform, AIM);
               DrawVirtualObject("cube");
           }
+          if(pressT){
+              if(arrowType == teleport)
+                 arrowType = normal;
+              else
+                arrowType = teleport;
+              if(arrowType != teleport)
+                 teleportPosition = camera_position_c;
+          }
+          if(pressR){
+              if(arrowType == plataform)
+                arrowType = normal;
+              else
+                arrowType = plataform;
+          }
+
+          if(arrowType == teleport && g_RightMouseButtonPressed){
+              camera_position_c = teleportPosition;
+          }
+          if(arrowType == plataform && g_RightMouseButtonPressed){
+              cubos[cubos.size()-1].x = plataformPosition.x;
+              cubos[cubos.size()-1].y = plataformPosition.y;
+              cubos[cubos.size()-1].z = plataformPosition.z;
+          }
 
           if(charging && (stretchCount/5)+1 < 20)
           {
@@ -808,6 +844,12 @@ void playGame()
               if(chargeTime > 5.0)
                   chargeTime = 5.0;
               arrows.push_back(Arrow(camera_position_c, (float)chargeTime*camera_view_vector, g_CameraTheta, g_CameraPhi));
+              if(arrowType == teleport){
+                  arrows[arrows.size()-1].type = teleport;
+              }
+              else if(arrowType == plataform)
+                  arrows[arrows.size()-1].type = plataform;
+
               engine->play2D("../../audio/arco.mp3", false);
           }
 
@@ -826,18 +868,31 @@ void playGame()
                     * Matrix_Rotate( g_CameraTheta + 3.14/24, camera_up_vector)
                     * Matrix_Scale(1, 1, 1);
             glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-            glUniform1i(object_id_uniform, ARROW);
+            if(arrowType == teleport)
+                glUniform1i(object_id_uniform, ARROWT);
+            else if(arrowType == plataform)
+                glUniform1i(object_id_uniform, ARROWP);
+            else
+                glUniform1i(object_id_uniform, ARROW);
             DrawVirtualObject("arrow");
           }
+
+          if(arrows.size() > 5)
+              arrows.erase(arrows.begin()+5, arrows.end());
 
           for(unsigned i = 0; i < arrows.size(); i++)
           {
               updateArrow(&arrows[i], whileTime);
 
+              if(arrows[i].type == teleport)
+                 teleportPosition = arrows[i].pos;
+              else if(arrows[i].type == plataform)
+                 plataformPosition = arrows[i].pos;
+
               for(int j = 0; j < (int) cubos.size(); j++)
               {
-                  model = Matrix_Translate(cubos[j].x,cubos[j].y,cubos[j].z)
-                          * Matrix_Scale(cubos[j].dx,cubos[j].dy,cubos[j].dz);
+                  model = Matrix_Translate(cubos[j].x, cubos[j].y, cubos[j].z)
+                          * Matrix_Scale(cubos[j].dx, cubos[j].dy, cubos[j].dz);
 
                   glm::vec4 bbox_max = model * glm::vec4(g_VirtualScene["cube"].bbox_max.x, g_VirtualScene["cube"].bbox_max.y, g_VirtualScene["cube"].bbox_max.z, 1.0f);
                   glm::vec4 bbox_min = model * glm::vec4(g_VirtualScene["cube"].bbox_min.x, g_VirtualScene["cube"].bbox_min.y, g_VirtualScene["cube"].bbox_min.z, 1.0f);
@@ -851,18 +906,24 @@ void playGame()
                   // Otherwise draw the arrow
                   else
                   {
-                      glm::vec4 uNew = crossproduct(camera_up_vector, -arrows[i].speed/norm(arrows[i].speed));
+                      glm::vec4 uNew = crossproduct(camera_up_vector, - arrows[i].speed/norm(arrows[i].speed));
                       model = Matrix_Translate(arrows[i].pos.x, arrows[i].pos.y, arrows[i].pos.z)
                               * Matrix_Rotate(arrows[i].phiAngle, uNew)
                               * Matrix_Rotate(arrows[i].thetaAngle, camera_up_vector);
                       glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-                      glUniform1i(object_id_uniform, ARROW);
+                      if(arrows[i].type == teleport)
+                        glUniform1i(object_id_uniform, ARROWT);
+                      else if(arrows[i].type == plataform)
+                        glUniform1i(object_id_uniform, ARROWP);
+                      else
+                        glUniform1i(object_id_uniform, ARROW);
                       DrawVirtualObject("arrow");
                   }
               }
           }
-
+          arrowRateController--;
         }
+
         // O framebuffer onde OpenGL executa as operações de renderização não
         // é o mesmo que está sendo mostrado para o usuário, caso contrário
         // seria possível ver artefatos conhecidos como "screen tearing". A
@@ -878,8 +939,6 @@ void playGame()
         glfwPollEvents();
 
         whileTime = (glfwGetTime() * 10) - actualSecond;
-
-        arrowRateController--;
     }
 }
 
@@ -1623,9 +1682,12 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     // Se o usuário apertar a tecla R, recarregamos os shaders dos arquivos "shader_fragment.glsl" e "shader_vertex.glsl".
     if (key == GLFW_KEY_R && action == GLFW_PRESS)
     {
+        pressR = true;
+        /*
         LoadShadersFromFiles();
         fprintf(stdout,"Shaders recarregados!\n");
         fflush(stdout);
+        */
     }
 
     ///Teste de se apertou alguma das teclas WASD ou SPACE
@@ -1646,7 +1708,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
 
     if (key == GLFW_KEY_D && action == GLFW_PRESS)
     {
-        pressD =true;
+        pressD = true;
     }
 
     if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
@@ -1673,6 +1735,21 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     if (key == GLFW_KEY_D && action == GLFW_RELEASE)
     {
         pressD = false;
+    }
+
+
+    if (key == GLFW_KEY_T && action == GLFW_PRESS)
+    {
+        pressT = true;
+    }
+    if (key == GLFW_KEY_T && action == GLFW_RELEASE)
+    {
+        pressT = false;
+    }
+
+    if (key == GLFW_KEY_R && action == GLFW_RELEASE)
+    {
+        pressR = false;
     }
 
     if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE)
@@ -2043,7 +2120,7 @@ void atualizaPulo()
 }
 
 ///Se o personagem esta caminhando na plataforma sem pular, testa quando ele cai ou ainda permanece sobre a plataforma
-void testaChao(float novoX,float novoZ,unsigned int *startFall,unsigned int actualSecond,std::vector<objeto> cubos)
+void testaChao(float novoX,float novoZ,unsigned int *startFall,unsigned int actualSecond,std::vector<Cubo> cubos)
 {
     CAINDO = true;
     for(int i = 0; i < (int) cubos.size() ; i++)
@@ -2064,7 +2141,7 @@ void testaChao(float novoX,float novoZ,unsigned int *startFall,unsigned int actu
 
 
 ///Funcao principal de tratar colisao. Deriva em varias funcoes menores para cada ocasiao especifica
-void trataColisaoCubo(float novoX,float antigoY,float novoZ, int nearest,bool *invadiuObjeto,std::vector<objeto> cubos)
+void trataColisaoCubo(float novoX,float antigoY,float novoZ, int nearest,bool *invadiuObjeto,std::vector<Cubo> cubos)
 {
     ///Nao documentei todos os casos dessa funcao pq ela esta incompleta ou daria pra colocar 1 caso mais especifico
     if(nearest == oldCubo)
@@ -2112,7 +2189,7 @@ void trataColisaoCubo(float novoX,float antigoY,float novoZ, int nearest,bool *i
 }
 
 ///Retorna o indice da plataforma mais proxima da camera no vetor de plataformas passado
-int cuboProximo(float novoX,float antigoY,float novoZ,std::vector<objeto> cubos)
+int cuboProximo(float novoX,float antigoY,float novoZ,std::vector<Cubo> cubos)
 {
     int indice = -1;
     float longe = 100;
@@ -2138,7 +2215,7 @@ int cuboProximo(float novoX,float antigoY,float novoZ,std::vector<objeto> cubos)
 }
 
 /// Caso o personagem parar de estar "voando sobre o vazio" testa algumas possiveis colisoes
-void processaColisao(float novoX,float antigoY,float novoZ,bool *invadiuObjeto,std::vector<objeto> cubos)
+void processaColisao(float novoX,float antigoY,float novoZ,bool *invadiuObjeto,std::vector<Cubo> cubos)
 {
     int nearest = cuboProximo(novoX,antigoY,novoZ,cubos);
     //std::cout<< oldCubo <<std::endl;
@@ -2164,7 +2241,7 @@ bool processaPouso(float antigoY,float cuboY,float cuboDY,float correcao)
 }
 
 /// Sepa processa os Movimentos, desconfio pelo nome da funcao
-void processaMovimentos(bool WASD,float antigoX,float * novoX,float antigoZ,float * novoZ,float antigoY,std::vector<objeto> cubos)
+void processaMovimentos(bool WASD,float antigoX,float * novoX,float antigoZ,float * novoZ,float antigoY,std::vector<Cubo> cubos)
 {
     antigoY = camera_position_c.y;
     if(WASD || CAINDO || JUMPING)

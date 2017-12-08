@@ -666,7 +666,7 @@
 	<glm/gtc/type_ptr.hpp>
 	<iostream>
 
-1511754574 c:\users\lucas\desktop\the-insane-game\include\arrow.h
+1512755373 c:\users\lucas\desktop\the-insane-game\include\arrow.h
 	<glm/mat4x4.hpp>
 	<glm/vec4.hpp>
 	<glm/gtc/type_ptr.hpp>
@@ -1100,7 +1100,7 @@
 	<inttypes.h>
 	<stdint.h>
 
-1512236539 source:c:\users\lucas\desktop\the-insane-game\src\main.cpp
+1512757786 source:c:\users\lucas\desktop\the-insane-game\src\main.cpp
 	<cmath>
 	<cstdio>
 	<cstdlib>
@@ -1278,7 +1278,7 @@
 1511572168 c:\users\lucas\desktop\the-insane-game\include\utils.h
 	<cstdio>
 
-1511572168 c:\users\lucas\desktop\the-insane-game\include\matrices.h
+1512749416 c:\users\lucas\desktop\the-insane-game\include\matrices.h
 	<cstdio>
 	<cstdlib>
 	<glm/mat4x4.hpp>
@@ -1304,7 +1304,7 @@
 1511572168 source:c:\users\lucas\desktop\the-insane-game\src\stb_image.cpp
 	"stb_image.h"
 
-1511572168 source:c:\users\lucas\desktop\the-insane-game\src\textrendering.cpp
+1512749416 source:c:\users\lucas\desktop\the-insane-game\src\textrendering.cpp
 	<string>
 	<glad/glad.h>
 	<GLFW/glfw3.h>
@@ -1320,10 +1320,10 @@
 1511572168 source:c:\users\lucas\desktop\the-insane-game\src\tiny_obj_loader.cpp
 	"tiny_obj_loader.h"
 
-1512232754 source:c:\users\lucas\desktop\the-insane-game\src\collision.cpp
+1512237628 source:c:\users\lucas\desktop\the-insane-game\src\collision.cpp
 	"collision.hpp"
 
-1512232754 c:\users\lucas\desktop\the-insane-game\include\collision.hpp
+1512237628 c:\users\lucas\desktop\the-insane-game\include\collision.hpp
 	<glm/mat4x4.hpp>
 	<glm/vec4.hpp>
 	<glm/gtc/type_ptr.hpp>

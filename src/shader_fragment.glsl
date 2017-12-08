@@ -26,6 +26,8 @@ uniform mat4 projection;
 #define ARM 4
 #define BOW 5
 #define ARROW 6
+#define ARROWT 7
+#define ARROWP 8
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -89,6 +91,21 @@ void main()
             Ka = Kd / 2;
             q = 1.0;
             break;
+
+        case ARROWT:
+            Kd = vec3(0.5f, 1.0f, 0.05f);
+            Ks = vec3(0.0f, 0.0f, 0.0f);
+            Ka = Kd / 2;
+            q = 1.0;
+            break;
+
+        case ARROWP:
+            Kd = vec3(0.5f, 0.5f, 1.0f);
+            Ks = vec3(0.0f, 0.0f, 0.0f);
+            Ka = Kd / 2;
+            q = 1.0;
+            break;
+
         case ARM:
             U = texcoords.x;
             V = texcoords.y;
