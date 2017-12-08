@@ -121,8 +121,14 @@ struct Cubo
     float dy;
     float dz;
 
-    Cubo(float x1, float y1, float z1, float dx1, float dy1, float dz1){
-        x = x1; y = y1; z = z1; dx = dx1; dy = dx1; dz = dz1;
+    Cubo(float x1, float y1, float z1, float dx1, float dy1, float dz1)
+    {
+        x = x1;
+        y = y1;
+        z = z1;
+        dx = dx1;
+        dy = dx1;
+        dz = dz1;
     }
 };
 
@@ -181,12 +187,13 @@ void atualizaPulo();
 void testaChao(float novoX,float novoZ,unsigned int *startFall,unsigned int actualSecond,std::vector<Cubo> cubos);
 void trataColisaoCubo(float novoX,float antigoY,float novoZ, int nearest,bool *invadiuObjeto,std::vector<Cubo> cubos);
 bool processaPouso(float antigoY,float cuboY,float cuboDY,float correcao);
-void processaMovimentos(bool WASD,float antigoX,float *novoX,float antigoZ,float *novoZ,float antigoY,std::vector<Cubo> cubos);
+void processaMovimentos(bool WASD,float antigoX,float *novoX,float antigoZ,float *novoZ,float antigoY,std::vector<Cubo> cubos, glm::vec4 teleportPos);
 void aplicaGravidade();
 void processaColisao(float novoX,float antigoY,float novoZ,bool *invadiuObjeto,std::vector<Cubo> cubos);
 int cuboProximo(float novoX,float antigoY,float novoZ,std::vector<Cubo> cubos);
 void resetLife(float *novoX,float *novoZ);
-void handleTeleport(float * novoX,float * novoZ,std::vector<Cubo> cubos);
+ArrowType selectArrowType();
+void handleTeleport(float * novoX,float * novoZ,std::vector<Cubo> cubos, glm::vec4 teleportPos);
 
 // Variáveis que definem um programa de GPU (shaders). Veja função LoadShadersFromFiles().
 GLuint vertex_shader_id;
@@ -254,9 +261,11 @@ bool pressA = false;
 bool pressD = false;
 bool pressT = false;
 bool pressR = false;
+bool pressE = false;
 bool pressSpace = false;
 bool JUMPING = false;
 bool CAINDO = false;
+bool TELEPORT = false;
 float gravidade = 0.005;
 int oldCubo = 0;
 int startJump = 0;
@@ -372,7 +381,6 @@ int main(int argc, char* argv[])
     engine = createIrrKlangDevice();
     if (!engine)
         return 0; // error starting up the engine
-    //engine->play2D("../../audio/jogofcg.mp3", true);
 
     // Carregamos os shaders de vértices e de fragmentos que serão utilizados
     // para renderização. Veja slide 217 e 219 do documento no Moodle
@@ -474,6 +482,7 @@ int main(int argc, char* argv[])
 
 int menu()
 {
+    engine->play2D("../../audio/menuSong.wav", true);
     int selectionTime = 0;
 
     float startPos = -0.5f;
@@ -488,19 +497,24 @@ int menu()
     while(!enterPressed)
     {
         selectionTime++;
-        if(selectionTime == 5){
+        if(selectionTime == 5)
+        {
             selectionTime = 0;
         }
 
-        if(selectionTime == 0){
-            if(pressW && selectPos > 0){
+        if(selectionTime == 0)
+        {
+            if(pressW && selectPos > 0)
+            {
                 selectPos--;
             }
-            if(pressS && selectPos < 2){
+            if(pressS && selectPos < 2)
+            {
                 selectPos++;
             }
 
-            switch(selectPos){
+            switch(selectPos)
+            {
             case 0:
                 startSize = 2.5f;
                 optionSize = 1.0f;
@@ -608,6 +622,8 @@ int menu()
         glfwPollEvents();
     }
 
+    engine->stopAllSounds();
+    engine->play2D("../../audio/initGame.wav", false);
     return selectPos;
 
 }
@@ -632,8 +648,10 @@ void playGame()
     resetLife(&novoX, &novoZ);
 
     ArrowType arrowType = normal;
-    glm::vec4 teleportPosition = camera_position_c;
-    glm::vec4 plataformPosition = camera_position_c - 100.f*camera_up_vector;
+    glm::vec4 teleportPosition;
+    glm::vec4 *plataformArrowPosition = nullptr;
+
+    engine->play2D("../../audio/song1.wav", true);
 
     // Ficamos em loop, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
@@ -677,7 +695,7 @@ void playGame()
         {
             atualizaPulo();
         }
-        processaMovimentos(WASD,antigoX,&novoX,antigoZ,&novoZ,antigoY, cubos);
+        processaMovimentos(WASD,antigoX,&novoX,antigoZ,&novoZ,antigoY, cubos, teleportPosition);
 
         // Computamos a matriz "View" utilizando os parâmetros da câmera para
         // definir o sistema de coordenadas da câmera.  Veja slide 169 do
@@ -714,220 +732,211 @@ void playGame()
             float l = -r;
             projection = Matrix_Orthographic(l, r, b, t, nearplane, farplane);
         }
-        if(DIED && !enterPressed){
-          TextRendering_PrintString(window, "YOU DIED", -0.5f, 0.0f, 5.0f);
-          TextRendering_PrintString(window, "Press enter to continue...", -0.5f, -0.5f, 1.0f);
+        if(DIED && !enterPressed)
+        {
+            TextRendering_PrintString(window, "YOU DIED", -0.5f, 0.0f, 5.0f);
+            TextRendering_PrintString(window, "Press enter to continue...", -0.5f, -0.5f, 1.0f);
         }
-        else{
+        else
+        {
 
-          glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
+            glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
 
-          // Enviamos as matrizes "view" e "projection" para a placa de vídeo
-          // (GPU). Veja o arquivo "shader_vertex.glsl", onde estas são
-          // efetivamente aplicadas em todos os pontos.
-          glUniformMatrix4fv(view_uniform, 1, GL_FALSE, glm::value_ptr(view));
-          glUniformMatrix4fv(projection_uniform, 1, GL_FALSE, glm::value_ptr(projection));
+            // Enviamos as matrizes "view" e "projection" para a placa de vídeo
+            // (GPU). Veja o arquivo "shader_vertex.glsl", onde estas são
+            // efetivamente aplicadas em todos os pontos.
+            glUniformMatrix4fv(view_uniform, 1, GL_FALSE, glm::value_ptr(view));
+            glUniformMatrix4fv(projection_uniform, 1, GL_FALSE, glm::value_ptr(projection));
 
-          // Desenhamos o modelo da esfera
-          model = Matrix_Translate(-1.0f,0.0f,0.0f)
-                  * Matrix_Rotate_Z(0.6f)
-                  * Matrix_Rotate_X(0.2f)
-                  * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
-          glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-          glUniform1i(object_id_uniform, SPHERE);
-          DrawVirtualObject("sphere");
-
-          // Desenhamos o modelo do coelho
-          model = Matrix_Translate(1.0f,0.0f,0.0f)
-                  * Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f);
-          glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-          glUniform1i(object_id_uniform, BUNNY);
-          DrawVirtualObject("bunny");
-
-          model = Matrix_Translate(0.0f,-1.0f,0.0f)
-                  * Matrix_Scale(100.0, 1.0, 100.0);
-          glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-          glUniform1i(object_id_uniform, PLANE);
-          DrawVirtualObject("plane");
-
-          std::stringstream sst;
-          sst << (int) (stretchCount/5)+1;
-          std::string st = "bow_anim" + sst.str();
-          char* bowStretch = new char[st.length()];
-          strcpy(bowStretch, st.c_str());
-
-          glm::vec4 bowPos = 1.5f*camera_view_vector + 0.15f*u + -0.2f*v;
-
-          model = Matrix_Translate(camera_position_c[0] + bowPos[0],
-                                   camera_position_c[1] + bowPos[1],
-                                   camera_position_c[2] + bowPos[2])
-                  * Matrix_Rotate(3.14/3 - ((float)stretchCount/(5*19))*(3.14/3), camera_view_vector)
-                  * Matrix_Rotate(g_CameraPhi, u)
-                  * Matrix_Rotate(3.14/2 + g_CameraTheta, camera_up_vector)
-                  * Matrix_Scale(0.065, 0.035, 0.065);
-          glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-          glUniform1i(object_id_uniform, BOW);
-          DrawVirtualObject(bowStretch);
-
-          glm::vec4 handPos =   ((float)stretchCount/(5*19)) * 1.5f*camera_view_vector + (1 -((float)stretchCount/(5*19))) * 1.45f*camera_view_vector
-                              + ((float)stretchCount/(5*19)) * 0.05f*u + (1 -((float)stretchCount/(5*19))) * -0.3f*u
-                              + ((float)stretchCount/(5*19)) * -0.55f*v + (1 -((float)stretchCount/(5*19))) * -0.3f*v;
-
-          model =  Matrix_Translate(camera_position_c[0] + handPos[0],
-                                    camera_position_c[1] + handPos[1],
-                                    camera_position_c[2] + handPos[2])
-                   * Matrix_Rotate(-3.14/6- ((float)stretchCount/(5*19))*(3.14/3), camera_view_vector)
-                   * Matrix_Rotate(g_CameraPhi, u)
-                   * Matrix_Rotate(g_CameraTheta + 3.14, camera_up_vector)
-                   * Matrix_Scale(0.009, 0.009, 0.009);
-          glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-          glUniform1i(object_id_uniform, ARM);
-          DrawVirtualObject("hand");
-
-          model = Matrix_Translate(camera_position_c[0] + camera_view_vector[0],
-                                   camera_position_c[1] + camera_view_vector[1],
-                                   camera_position_c[2] + camera_view_vector[2])
-                  * Matrix_Rotate(g_CameraPhi + 3.14/2, u)
-                  * Matrix_Rotate(3.14/2 + g_CameraTheta, camera_up_vector)
-                  *Matrix_Scale(0.0075, 1.5, 0.0075);
-          glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-          glUniform1i(object_id_uniform, AIM);
-          DrawVirtualObject("plane");
-
-          for(int i = 0; i < (int) cubos.size(); i++)
-          {
-              model = Matrix_Translate(cubos[i].x,cubos[i].y,cubos[i].z)
-                      * Matrix_Scale(cubos[i].dx * 0.9,cubos[i].dy,cubos[i].dz * 0.9);
-              glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-              glUniform1i(object_id_uniform, AIM);
-              DrawVirtualObject("cube");
-          }
-
-          ///TODO olha essas proximas linhas de codigo, Tem MUITOS if em sequencia sem elses. ve se alguns deles nao sao opostos entre si e usa elses
-           ///TODO olha essas proximas linhas de codigo, Tem MUITOS if em sequencia sem elses. ve se alguns deles nao sao opostos entre si e usa elses
-            ///TODO olha essas proximas linhas de codigo, Tem MUITOS if em sequencia sem elses. ve se alguns deles nao sao opostos entre si e usa elses
-          if(pressT){
-              if(arrowType == teleport)
-                 arrowType = normal;
-              else
-                arrowType = teleport;
-              if(arrowType != teleport)
-                 teleportPosition = camera_position_c;
-          }
-          if(pressR){
-              if(arrowType == plataform)
-                arrowType = normal;
-              else
-                arrowType = plataform;
-          }
-
-          if(arrowType == teleport && g_RightMouseButtonPressed){
-            camera_position_c = teleportPosition;
-            hasTeleported = true;
-            CAINDO = false;
-            JUMPING = false;
-
-          }
-            if(arrowType == plataform && g_RightMouseButtonPressed){
-              cubos[cubos.size()-1].x = plataformPosition.x;
-              cubos[cubos.size()-1].y = plataformPosition.y;
-              cubos[cubos.size()-1].z = plataformPosition.z;
-          }
-
-          if(charging && (stretchCount/5)+1 < 20)
-          {
-              stretchCount++;
-          }
-          if(g_LeftMouseButtonPressed && !charging && arrowReplaced)
-          {
-              charging = true;
-              chargeTime = (glfwGetTime() * 10);
-          }
-          if(!g_LeftMouseButtonPressed && charging && arrowReplaced)
-          {
-              arrowReplaced = false;
-              arrowRateController = 50;
-              stretchCount = 0;
-              charging = false;
-              chargeTime = (glfwGetTime() * 10) - chargeTime;
-              if(chargeTime > 10.0)
-                  chargeTime = 10.0;
-              arrows.push_back(Arrow(camera_position_c, (float)chargeTime*camera_view_vector, g_CameraTheta, g_CameraPhi));
-              if(arrowType == teleport){
-                  arrows[arrows.size()-1].type = teleport;
-              }
-              else if(arrowType == plataform)
-                  arrows[arrows.size()-1].type = plataform;
-
-              engine->play2D("../../audio/arco.mp3", false);
-          }
-
-          if(arrowRateController < 0){
-
-            arrowReplaced = true;
-            glm::vec4 arrowPos =  ((float)stretchCount/(5*19)) * 1.0f*camera_view_vector + (1 -((float)stretchCount/(5*19))) * 2.0f*camera_view_vector
-                                + ((float)stretchCount/(5*19)) * 0.15f*u + (1 -((float)stretchCount/(5*19))) * 0.06f*u
-                                + ((float)stretchCount/(5*19)) * -0.25f*v + (1 -((float)stretchCount/(5*19))) * -0.15f*v;
-
-            model = Matrix_Translate(camera_position_c[0] + arrowPos[0],
-                                     camera_position_c[1] + arrowPos[1],
-                                     camera_position_c[2] + arrowPos[2])
-                    * Matrix_Rotate(3.14/4, camera_view_vector)
-                    * Matrix_Rotate(g_CameraPhi, u)
-                    * Matrix_Rotate( g_CameraTheta + 3.14/24, camera_up_vector)
-                    * Matrix_Scale(1, 1, 1);
+            // Desenhamos o modelo da esfera
+            model = Matrix_Translate(-1.0f,0.0f,0.0f)
+                    * Matrix_Rotate_Z(0.6f)
+                    * Matrix_Rotate_X(0.2f)
+                    * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
             glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-            if(arrowType == teleport)
-                glUniform1i(object_id_uniform, ARROWT);
-            else if(arrowType == plataform)
-                glUniform1i(object_id_uniform, ARROWP);
-            else
-                glUniform1i(object_id_uniform, ARROW);
-            DrawVirtualObject("arrow");
-          }
+            glUniform1i(object_id_uniform, SPHERE);
+            DrawVirtualObject("sphere");
 
-          for(unsigned i = 0; i < arrows.size(); i++)
-          {
-              updateArrow(&arrows[i], whileTime);
+            // Desenhamos o modelo do coelho
+            model = Matrix_Translate(1.0f,0.0f,0.0f)
+                    * Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f);
+            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(object_id_uniform, BUNNY);
+            DrawVirtualObject("bunny");
 
-              if(arrows[i].type == teleport)
-                 teleportPosition = arrows[i].pos;
-              else if(arrows[i].type == plataform)
-                 plataformPosition = arrows[i].pos;
+            model = Matrix_Translate(0.0f,-1.0f,0.0f)
+                    * Matrix_Scale(100.0, 1.0, 100.0);
+            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(object_id_uniform, PLANE);
+            DrawVirtualObject("plane");
 
-              for(int j = 0; j < (int) cubos.size(); j++)
-              {
-                  model = Matrix_Translate(cubos[j].x, cubos[j].y, cubos[j].z)
-                          * Matrix_Scale(cubos[j].dx, cubos[j].dy, cubos[j].dz);
+            std::stringstream sst;
+            sst << (int) (stretchCount/5)+1;
+            std::string st = "bow_anim" + sst.str();
+            char* bowStretch = new char[st.length()];
+            strcpy(bowStretch, st.c_str());
 
-                  glm::vec4 bbox_max = model * glm::vec4(g_VirtualScene["cube"].bbox_max.x, g_VirtualScene["cube"].bbox_max.y, g_VirtualScene["cube"].bbox_max.z, 1.0f);
-                  glm::vec4 bbox_min = model * glm::vec4(g_VirtualScene["cube"].bbox_min.x, g_VirtualScene["cube"].bbox_min.y, g_VirtualScene["cube"].bbox_min.z, 1.0f);
+            glm::vec4 bowPos = 1.5f*camera_view_vector + 0.15f*u + -0.2f*v;
 
-                  // If arrow collides with box
-                  if(isPointInsideBBOX(arrows[i].pos, bbox_min, bbox_max))
-                  {
-                      engine->play2D("../../audio/arco.mp3", false);
-                      arrows.erase(arrows.begin() + i);
-                  }
-                  // Otherwise draw the arrow
-                  else
-                  {
-                      glm::vec4 uNew = crossproduct(camera_up_vector, - arrows[i].speed/norm(arrows[i].speed));
-                      model = Matrix_Translate(arrows[i].pos.x, arrows[i].pos.y, arrows[i].pos.z)
-                              * Matrix_Rotate(arrows[i].phiAngle, uNew)
-                              * Matrix_Rotate(arrows[i].thetaAngle, camera_up_vector);
-                      glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-                      if(arrows[i].type == teleport)
-                        glUniform1i(object_id_uniform, ARROWT);
-                      else if(arrows[i].type == plataform)
-                        glUniform1i(object_id_uniform, ARROWP);
-                      else
-                        glUniform1i(object_id_uniform, ARROW);
-                      DrawVirtualObject("arrow");
-                  }
-              }
-          }
-          arrowRateController--;
+            model = Matrix_Translate(camera_position_c[0] + bowPos[0],
+                                     camera_position_c[1] + bowPos[1],
+                                     camera_position_c[2] + bowPos[2])
+                    * Matrix_Rotate(3.14/3 - ((float)stretchCount/(5*19))*(3.14/3), camera_view_vector)
+                    * Matrix_Rotate(g_CameraPhi, u)
+                    * Matrix_Rotate(3.14/2 + g_CameraTheta, camera_up_vector)
+                    * Matrix_Scale(0.065, 0.035, 0.065);
+            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(object_id_uniform, BOW);
+            DrawVirtualObject(bowStretch);
+
+            glm::vec4 handPos =   ((float)stretchCount/(5*19)) * 1.5f*camera_view_vector + (1 -((float)stretchCount/(5*19))) * 1.45f*camera_view_vector
+                                  + ((float)stretchCount/(5*19)) * 0.05f*u + (1 -((float)stretchCount/(5*19))) * -0.3f*u
+                                  + ((float)stretchCount/(5*19)) * -0.55f*v + (1 -((float)stretchCount/(5*19))) * -0.3f*v;
+
+            model =  Matrix_Translate(camera_position_c[0] + handPos[0],
+                                      camera_position_c[1] + handPos[1],
+                                      camera_position_c[2] + handPos[2])
+                     * Matrix_Rotate(-3.14/6- ((float)stretchCount/(5*19))*(3.14/3), camera_view_vector)
+                     * Matrix_Rotate(g_CameraPhi, u)
+                     * Matrix_Rotate(g_CameraTheta + 3.14, camera_up_vector)
+                     * Matrix_Scale(0.009, 0.009, 0.009);
+            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(object_id_uniform, ARM);
+            DrawVirtualObject("hand");
+
+            model = Matrix_Translate(camera_position_c[0] + camera_view_vector[0],
+                                     camera_position_c[1] + camera_view_vector[1],
+                                     camera_position_c[2] + camera_view_vector[2])
+                    * Matrix_Rotate(g_CameraPhi + 3.14/2, u)
+                    * Matrix_Rotate(3.14/2 + g_CameraTheta, camera_up_vector)
+                    *Matrix_Scale(0.0075, 1.5, 0.0075);
+            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(object_id_uniform, AIM);
+            DrawVirtualObject("plane");
+
+            for(int i = 0; i < (int) cubos.size(); i++)
+            {
+                model = Matrix_Translate(cubos[i].x,cubos[i].y,cubos[i].z)
+                        * Matrix_Scale(cubos[i].dx * 0.9,cubos[i].dy,cubos[i].dz * 0.9);
+                glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+                glUniform1i(object_id_uniform, AIM);
+                DrawVirtualObject("cube");
+            }
+
+            if(pressE || pressR || pressT)
+                arrowType = selectArrowType();
+
+            // Create plataform
+            if(g_RightMouseButtonPressed && plataformArrowPosition != nullptr)
+            {
+                cubos[cubos.size()-1].x = plataformArrowPosition->x;
+                cubos[cubos.size()-1].y = plataformArrowPosition->y;
+                cubos[cubos.size()-1].z = plataformArrowPosition->z;
+            }
+
+            if(charging && (stretchCount/5)+1 < 20)
+            {
+                stretchCount++;
+            }
+            if(g_LeftMouseButtonPressed && !charging && arrowReplaced)
+            {
+                charging = true;
+                chargeTime = (glfwGetTime() * 10);
+            }
+            // Shoot arrow
+            if(!g_LeftMouseButtonPressed && charging && arrowReplaced)
+            {
+                arrowReplaced = false;
+                arrowRateController = 50;
+                stretchCount = 0;
+                charging = false;
+                chargeTime = (glfwGetTime() * 10) - chargeTime;
+                if(chargeTime > 10.0)
+                    chargeTime = 10.0;
+                arrows.push_back(Arrow(camera_position_c, (float)chargeTime*camera_view_vector, g_CameraTheta, g_CameraPhi));
+                if(arrowType == teleport)
+                {
+                    arrows[arrows.size()-1].type = teleport;
+                }
+                else if(arrowType == plataform){
+                    arrows[arrows.size()-1].type = plataform;
+                    plataformArrowPosition = &(arrows[arrows.size()-1].pos);
+                }
+
+                engine->play2D("../../audio/arco.mp3", false);
+            }
+
+            if(arrowRateController < 0)
+            {
+
+                arrowReplaced = true;
+                glm::vec4 arrowPos =  ((float)stretchCount/(5*19)) * 1.0f*camera_view_vector + (1 -((float)stretchCount/(5*19))) * 2.0f*camera_view_vector
+                                      + ((float)stretchCount/(5*19)) * 0.15f*u + (1 -((float)stretchCount/(5*19))) * 0.06f*u
+                                      + ((float)stretchCount/(5*19)) * -0.25f*v + (1 -((float)stretchCount/(5*19))) * -0.15f*v;
+
+                model = Matrix_Translate(camera_position_c[0] + arrowPos[0],
+                                         camera_position_c[1] + arrowPos[1],
+                                         camera_position_c[2] + arrowPos[2])
+                        * Matrix_Rotate(3.14/4, camera_view_vector)
+                        * Matrix_Rotate(g_CameraPhi, u)
+                        * Matrix_Rotate( g_CameraTheta + 3.14/24, camera_up_vector)
+                        * Matrix_Scale(1, 1, 1);
+                glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+                if(arrowType == teleport)
+                    glUniform1i(object_id_uniform, ARROWT);
+                else if(arrowType == plataform)
+                    glUniform1i(object_id_uniform, ARROWP);
+                else
+                    glUniform1i(object_id_uniform, ARROW);
+                DrawVirtualObject("arrow");
+            }
+
+            for(unsigned i = 0; i < arrows.size(); i++)
+            {
+                updateArrow(&arrows[i], whileTime);
+
+                for(int j = 0; j < (int) cubos.size(); j++)
+                {
+                    model = Matrix_Translate(cubos[j].x, cubos[j].y, cubos[j].z)
+                            * Matrix_Scale(cubos[j].dx, cubos[j].dy, cubos[j].dz);
+
+                    glm::vec4 bbox_max = model * glm::vec4(g_VirtualScene["cube"].bbox_max.x, g_VirtualScene["cube"].bbox_max.y, g_VirtualScene["cube"].bbox_max.z, 1.0f);
+                    glm::vec4 bbox_min = model * glm::vec4(g_VirtualScene["cube"].bbox_min.x, g_VirtualScene["cube"].bbox_min.y, g_VirtualScene["cube"].bbox_min.z, 1.0f);
+
+                    // If arrow collides with box
+                    if(isPointInsideBBOX(arrows[i].pos, bbox_min, bbox_max))
+                    {
+                        engine->play2D("../../audio/plim.wav", false);
+                        if(arrows[i].type == plataform){
+                            plataformArrowPosition = nullptr;
+                        }
+                        else if(arrows[i].type == teleport){
+                            teleportPosition = arrows[i].pos;
+                            TELEPORT = true;
+                            engine->play2D("../../audio/teleport.wav", false);
+                        }
+
+                        arrows.erase(arrows.begin() + i);
+                    }
+                    // Otherwise draw the arrow
+                    else
+                    {
+                        glm::vec4 uNew = crossproduct(camera_up_vector, - arrows[i].speed/norm(arrows[i].speed));
+                        model = Matrix_Translate(arrows[i].pos.x, arrows[i].pos.y, arrows[i].pos.z)
+                                * Matrix_Rotate(arrows[i].phiAngle, uNew)
+                                * Matrix_Rotate(arrows[i].thetaAngle, camera_up_vector);
+                        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+                        if(arrows[i].type == teleport)
+                            glUniform1i(object_id_uniform, ARROWT);
+                        else if(arrows[i].type == plataform)
+                            glUniform1i(object_id_uniform, ARROWP);
+                        else
+                            glUniform1i(object_id_uniform, ARROW);
+                        DrawVirtualObject("arrow");
+                    }
+                }
+            }
+            arrowRateController--;
         }
 
         // O framebuffer onde OpenGL executa as operações de renderização não
@@ -1638,7 +1647,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
 
     if ( (key == GLFW_KEY_ENTER || key == GLFW_KEY_KP_ENTER) && action == GLFW_PRESS)
     {
-      enterPressed = true;
+        enterPressed = true;
     }
 
     if (key == GLFW_KEY_X && action == GLFW_PRESS)
@@ -1751,6 +1760,15 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     if (key == GLFW_KEY_T && action == GLFW_RELEASE)
     {
         pressT = false;
+    }
+
+    if (key == GLFW_KEY_E && action == GLFW_PRESS)
+    {
+        pressE = true;
+    }
+    if (key == GLFW_KEY_E && action == GLFW_RELEASE)
+    {
+        pressE = false;
     }
 
     if (key == GLFW_KEY_R && action == GLFW_RELEASE)
@@ -2246,16 +2264,14 @@ bool processaPouso(float antigoY,float cuboY,float cuboDY,float correcao)
 }
 
 /// Sepa processa os Movimentos, desconfio pelo nome da funcao
-void processaMovimentos(bool WASD,float antigoX,float * novoX,float antigoZ,float * novoZ,float antigoY,std::vector<Cubo> cubos)
+void processaMovimentos(bool WASD,float antigoX,float * novoX,float antigoZ,float * novoZ,float antigoY,std::vector<Cubo> cubos, glm::vec4 teleportPos)
 {
     antigoY = camera_position_c.y;
 
-    if(hasTeleported)
-    {
-        hasTeleported = false;
-        handleTeleport(novoX,novoZ,cubos);
-    }
-    else if(WASD || CAINDO || JUMPING)
+    if(TELEPORT)
+        handleTeleport(novoX, novoZ, cubos, teleportPos);
+
+    if(WASD || CAINDO || JUMPING)
     {
         bool invadiuObjeto = false;
 
@@ -2285,9 +2301,24 @@ void processaMovimentos(bool WASD,float antigoX,float * novoX,float antigoZ,floa
     }
 }
 
-void handleTeleport(float * novoX,float * novoZ,std::vector<Cubo> cubos)
+ArrowType selectArrowType()
 {
-    int teleportedPlatform = cuboProximo(camera_position_c.x,camera_position_c.y,camera_position_c.z,cubos);
+    if(pressE)
+    {
+        return normal;
+    }
+    else if(pressR)
+    {
+        return plataform;
+    }
+    else if(pressT){
+        return teleport;
+    }
+}
+
+void handleTeleport(float * novoX,float * novoZ, std::vector<Cubo> cubos, glm::vec4 teleportPos)
+{
+    int teleportedPlatform = cuboProximo(teleportPos.x,teleportPos.y,teleportPos.z,cubos);
     //cout <<"cubo onde estou em cima : "<< teleportedPlatform << endl;
     if (teleportedPlatform != -1)
     {
@@ -2296,13 +2327,11 @@ void handleTeleport(float * novoX,float * novoZ,std::vector<Cubo> cubos)
         camera_position_c.y =(cubos[teleportedPlatform].y + cubos[teleportedPlatform].dy/2) + ALTURAHERO;
         *novoX = camera_position_c.x;
         *novoZ = camera_position_c.z;
-    }
-    else
-    {
-        resetLife(novoX,novoZ);
-    }
 
-
+        CAINDO = false;
+        JUMPING = false;
+        TELEPORT = false;
+    }
 
 }
 
