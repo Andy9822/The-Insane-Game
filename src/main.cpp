@@ -70,7 +70,7 @@
 #define ARROW 6
 #define ARROWT 7
 #define ARROWP 8
-
+using namespace std;
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
 struct ObjModel
@@ -186,6 +186,7 @@ void aplicaGravidade();
 void processaColisao(float novoX,float antigoY,float novoZ,bool *invadiuObjeto,std::vector<Cubo> cubos);
 int cuboProximo(float novoX,float antigoY,float novoZ,std::vector<Cubo> cubos);
 void resetLife(float *novoX,float *novoZ);
+void handleTeleport(float * novoX,float * novoZ,std::vector<Cubo> cubos);
 
 // Variáveis que definem um programa de GPU (shaders). Veja função LoadShadersFromFiles().
 GLuint vertex_shader_id;
@@ -262,7 +263,7 @@ int startJump = 0;
 double actualSecond;
 double whileTime;
 unsigned int startFall = 0;
-
+bool hasTeleported = false;
 bool enterPressed = false;
 
 ///Variaveis tiradas de serem globais
@@ -796,11 +797,15 @@ void playGame()
           for(int i = 0; i < (int) cubos.size(); i++)
           {
               model = Matrix_Translate(cubos[i].x,cubos[i].y,cubos[i].z)
-                      * Matrix_Scale(cubos[i].dx,cubos[i].dy,cubos[i].dz);
+                      * Matrix_Scale(cubos[i].dx * 0.9,cubos[i].dy,cubos[i].dz * 0.9);
               glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
               glUniform1i(object_id_uniform, AIM);
               DrawVirtualObject("cube");
           }
+
+          ///TODO olha essas proximas linhas de codigo, Tem MUITOS if em sequencia sem elses. ve se alguns deles nao sao opostos entre si e usa elses
+           ///TODO olha essas proximas linhas de codigo, Tem MUITOS if em sequencia sem elses. ve se alguns deles nao sao opostos entre si e usa elses
+            ///TODO olha essas proximas linhas de codigo, Tem MUITOS if em sequencia sem elses. ve se alguns deles nao sao opostos entre si e usa elses
           if(pressT){
               if(arrowType == teleport)
                  arrowType = normal;
@@ -817,9 +822,13 @@ void playGame()
           }
 
           if(arrowType == teleport && g_RightMouseButtonPressed){
-              camera_position_c = teleportPosition;
+            camera_position_c = teleportPosition;
+            hasTeleported = true;
+            CAINDO = false;
+            JUMPING = false;
+
           }
-          if(arrowType == plataform && g_RightMouseButtonPressed){
+            if(arrowType == plataform && g_RightMouseButtonPressed){
               cubos[cubos.size()-1].x = plataformPosition.x;
               cubos[cubos.size()-1].y = plataformPosition.y;
               cubos[cubos.size()-1].z = plataformPosition.z;
@@ -1627,7 +1636,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
 
     float delta = 3.141592 / 16; // 22.5 graus, em radianos.
 
-    if (key == GLFW_KEY_ENTER && action == GLFW_PRESS)
+    if ( (key == GLFW_KEY_ENTER || key == GLFW_KEY_KP_ENTER) && action == GLFW_PRESS)
     {
       enterPressed = true;
     }
@@ -2046,7 +2055,6 @@ void PrintObjModelInfo(ObjModel* model)
 
 void resetLife(float *novoX,float *novoZ)
 {
-    std::cout << "YOU DIED\n";
     camera_position_c = START_POSITION;
     CAINDO = false;
     *novoX = camera_position_c.x;
@@ -2185,7 +2193,7 @@ void trataColisaoCubo(float novoX,float antigoY,float novoZ, int nearest,bool *i
     }
 }
 
-///Retorna o indice da plataforma mais proxima da camera no vetor de plataformas passado
+///Retorna o indice da plataforma mais proxima da camera que esteja sendo invadido sua BBox no vetor de plataformas passado
 int cuboProximo(float novoX,float antigoY,float novoZ,std::vector<Cubo> cubos)
 {
     int indice = -1;
@@ -2241,7 +2249,13 @@ bool processaPouso(float antigoY,float cuboY,float cuboDY,float correcao)
 void processaMovimentos(bool WASD,float antigoX,float * novoX,float antigoZ,float * novoZ,float antigoY,std::vector<Cubo> cubos)
 {
     antigoY = camera_position_c.y;
-    if(WASD || CAINDO || JUMPING)
+
+    if(hasTeleported)
+    {
+        hasTeleported = false;
+        handleTeleport(novoX,novoZ,cubos);
+    }
+    else if(WASD || CAINDO || JUMPING)
     {
         bool invadiuObjeto = false;
 
@@ -2257,6 +2271,7 @@ void processaMovimentos(bool WASD,float antigoX,float * novoX,float antigoZ,floa
 
         if(DIED && enterPressed)
         {
+            std::cout << "YOU DIED\n";
             enterPressed = false;
             resetLife(novoX,novoZ);
             CAINDO = false;
@@ -2268,6 +2283,27 @@ void processaMovimentos(bool WASD,float antigoX,float * novoX,float antigoZ,floa
         }
 
     }
+}
+
+void handleTeleport(float * novoX,float * novoZ,std::vector<Cubo> cubos)
+{
+    int teleportedPlatform = cuboProximo(camera_position_c.x,camera_position_c.y,camera_position_c.z,cubos);
+    //cout <<"cubo onde estou em cima : "<< teleportedPlatform << endl;
+    if (teleportedPlatform != -1)
+    {
+        camera_position_c.x = cubos[teleportedPlatform].x;
+        camera_position_c.z = cubos[teleportedPlatform].z;
+        camera_position_c.y =(cubos[teleportedPlatform].y + cubos[teleportedPlatform].dy/2) + ALTURAHERO;
+        *novoX = camera_position_c.x;
+        *novoZ = camera_position_c.z;
+    }
+    else
+    {
+        resetLife(novoX,novoZ);
+    }
+
+
+
 }
 
 ///Essa aqui ta dificil... Pelo nome da funcao nao consigo deduzir
