@@ -52,6 +52,7 @@
 #include "utils.h"
 #include "matrices.h"
 #include "arrow.h"
+#include "enemy.h"
 #include "collision.hpp"
 
 // === DEFINES ===
@@ -301,8 +302,8 @@ bool charging = false;
 double chargeTime = 0.0f;
 bool arrowReplaced = true;
 
-glm::vec4 w ;
-glm::vec4 u ;
+glm::vec4 w;
+glm::vec4 u;
 
 // "g_LeftMouseButtonPressed = true" se o usuário está com o botão esquerdo do mouse
 // pressionado no momento atual. Veja função MouseButtonCallback().
@@ -675,8 +676,13 @@ void playGame()
     cubos.push_back(Cubo(0,0,0,1,1,1)); // Cubo usado para criar plataforma
 
     std::vector<Arrow> arrows;
+    std::vector<Enemy> enemies;
 
-    resetLife(&novoX, &novoZ,cubos);
+    for(int i = 0; i < 10; i++){
+        enemies.push_back(Enemy(glm::vec4(10*i+60.0f, 30.0f, 10.0f, 0.0f)));
+    }
+
+    resetLife(&novoX, &novoZ, cubos);
 
     ArrowType arrowType = normal;
     glm::vec4 teleportPosition;
@@ -852,17 +858,24 @@ void playGame()
             glUniform1i(object_id_uniform, AIM);
             DrawVirtualObject("plane");
 
-
-
-            for(int i = 0; i < (int) cubos.size(); i++)
+            for(unsigned i = 0; i < cubos.size(); i++)
             {
-
-                draw5Enemies(glm::vec3(cubos[i].x,cubos[i].y,cubos[i].z), cubos[i].dy, cubos[i].dx);
+                //draw5Enemies(glm::vec3(cubos[i].x,cubos[i].y,cubos[i].z), cubos[i].dy, cubos[i].dx);
                 model = Matrix_Translate(cubos[i].x,cubos[i].y,cubos[i].z)
                         * Matrix_Scale(cubos[i].dx * 0.9,cubos[i].dy,cubos[i].dz * 0.9);
                 glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
                 glUniform1i(object_id_uniform, AIM);
                 DrawVirtualObject("cube");
+            }
+
+            for(unsigned i = 0; i < enemies.size(); i++){
+                  updateEnemy(&enemies[i], camera_position_c, whileTime);
+
+                  model = Matrix_Translate(enemies[i].pos.x, enemies[i].pos.y, enemies[i].pos.z)
+                         * Matrix_Scale(enemies[i].scale.x, enemies[i].scale.y, enemies[i].scale.z);
+                  glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+                  glUniform1i(object_id_uniform, ARM);
+                  DrawVirtualObject(enemies[i].name.c_str());
             }
 
             if(pressE || pressR || pressT)
@@ -934,10 +947,12 @@ void playGame()
                 DrawVirtualObject("arrow");
             }
 
+            bool arrowCollides = false;
             for(unsigned i = 0; i < arrows.size(); i++)
             {
                 updateArrow(&arrows[i], whileTime);
 
+                // Colisao com cubos
                 for(int j = 0; j < (int) cubos.size(); j++)
                 {
                     model = Matrix_Translate(cubos[j].x, cubos[j].y, cubos[j].z)
@@ -958,26 +973,45 @@ void playGame()
                             TELEPORTED = true;
                             engine->play2D("../../audio/teleport.wav", false);
                         }
+                        arrowCollides = true;
+                    }
 
-                        arrows.erase(arrows.begin() + i);
-                    }
-                    // Otherwise draw the arrow
-                    else
-                    {
-                        glm::vec4 uNew = crossproduct(camera_up_vector, - arrows[i].speed/norm(arrows[i].speed));
-                        model = Matrix_Translate(arrows[i].pos.x, arrows[i].pos.y, arrows[i].pos.z)
-                                * Matrix_Rotate(arrows[i].phiAngle, uNew)
-                                * Matrix_Rotate(arrows[i].thetaAngle, camera_up_vector);
-                        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-                        if(arrows[i].type == teleport)
-                            glUniform1i(object_id_uniform, ARROWT);
-                        else if(arrows[i].type == plataform)
-                            glUniform1i(object_id_uniform, ARROWP);
-                        else
-                            glUniform1i(object_id_uniform, ARROW);
-                        DrawVirtualObject("arrow");
-                    }
                 }
+
+                //Colisao com inimigos
+                for(unsigned e = 0; e < enemies.size(); e++){
+                    model = Matrix_Translate(enemies[e].pos.x, enemies[e].pos.y, enemies[e].pos.z)
+                             * Matrix_Scale(enemies[e].scale.x, enemies[e].scale.y, enemies[e].scale.z);
+
+                    glm::vec4 bbox_max = model * glm::vec4(g_VirtualScene[enemies[e].name].bbox_max.x, g_VirtualScene[enemies[e].name].bbox_max.y, g_VirtualScene[enemies[e].name].bbox_max.z, 1.0f);
+                    glm::vec4 bbox_min = model * glm::vec4(g_VirtualScene[enemies[e].name].bbox_min.x, g_VirtualScene[enemies[e].name].bbox_min.y, g_VirtualScene[enemies[e].name].bbox_min.z, 1.0f);
+
+                    if(isPointInsideBBOX(arrows[i].pos, bbox_min, bbox_max)){
+                        enemies.erase(enemies.begin() + e);
+
+                        arrowCollides = true;
+                    }
+
+                }
+                // Draw the arrow
+                if(!arrowCollides){
+                    glm::vec4 uNew = crossproduct(camera_up_vector, - arrows[i].speed/norm(arrows[i].speed));
+                    model = Matrix_Translate(arrows[i].pos.x, arrows[i].pos.y, arrows[i].pos.z)
+                            * Matrix_Rotate(arrows[i].phiAngle, uNew)
+                            * Matrix_Rotate(arrows[i].thetaAngle, camera_up_vector);
+                    glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+                    if(arrows[i].type == teleport)
+                        glUniform1i(object_id_uniform, ARROWT);
+                    else if(arrows[i].type == plataform)
+                        glUniform1i(object_id_uniform, ARROWP);
+                    else
+                        glUniform1i(object_id_uniform, ARROW);
+                    DrawVirtualObject("arrow");
+                }
+                else{
+                    arrows.erase(arrows.begin() + i);
+                }
+
             }
             arrowRateController--;
         }
@@ -2401,7 +2435,7 @@ bool processaPouso(float antigoY,float cuboY,float cuboDY,float correcao)
 }
 
 /// Sepa processa os Movimentos, desconfio pelo nome da funcao
-void processaMovimentos(bool WASD,float antigoX,float * novoX,float antigoZ,float * novoZ,float antigoY,std::vector<Cubo> &cubos, glm::vec4 teleportPos)
+void processaMovimentos(bool WASD, float antigoX, float *novoX, float antigoZ, float *novoZ, float antigoY, std::vector<Cubo> &cubos, glm::vec4 teleportPos)
 {
     antigoY = camera_position_c.y;
 
@@ -2449,6 +2483,9 @@ ArrowType selectArrowType()
     }
     else if(pressT){
         return teleport;
+    }
+    else{
+        return normal;
     }
 }
 

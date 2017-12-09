@@ -70,6 +70,9 @@
 		<Unit filename="include/arrow.h" />
 		<Unit filename="include/collision.hpp" />
 		<Unit filename="include/dejavufont.h" />
+		<Unit filename="include/enemy.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="include/glad/glad.h" />
 		<Unit filename="include/glm/CMakeLists.txt" />
 		<Unit filename="include/glm/common.hpp" />
@@ -339,6 +342,7 @@
 		<Unit filename="include/utils.h" />
 		<Unit filename="src/arrow.cpp" />
 		<Unit filename="src/collision.cpp" />
+		<Unit filename="src/enemy.cpp" />
 		<Unit filename="src/glad.c">
 			<Option compilerVar="CC" />
 		</Unit>
