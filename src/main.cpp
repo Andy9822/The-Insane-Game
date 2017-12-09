@@ -183,6 +183,9 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
+///Element drawing
+void draw3Enemies(glm::vec3 cubeCenter, float cubeHeight, float cubeRadius);
+void draw5Enemies(glm::vec3 cubeCenter, float cubeHeight, float cubeRadius);
 
 ///Prototipos das funcoes feitas pelo Andy
 bool entreLimites(float posCamera, float eixo, float delta,float erro);
@@ -419,6 +422,22 @@ int main(int argc, char* argv[])
     ObjModel cowmodel("../../data/cow.obj");
     ComputeNormals(&cowmodel);
     BuildTrianglesAndAddToVirtualScene(&cowmodel);
+
+    ObjModel inkymodel("../../data/inky/Inky.obj");
+    ComputeNormals(&inkymodel);
+    BuildTrianglesAndAddToVirtualScene(&inkymodel);
+
+    ObjModel clydemodel("../../data/clyde/Clyde.obj");
+    ComputeNormals(&clydemodel);
+    BuildTrianglesAndAddToVirtualScene(&clydemodel);
+
+    ObjModel pinkymodel("../../data/pinky/Pinky.obj");
+    ComputeNormals(&pinkymodel);
+    BuildTrianglesAndAddToVirtualScene(&pinkymodel);
+
+    ObjModel blinkymodel("../../data/blinky/Blinky.obj");
+    ComputeNormals(&blinkymodel);
+    BuildTrianglesAndAddToVirtualScene(&blinkymodel);
 
     ObjModel cubemodel("../../data/cube.obj");
     ComputeNormals(&cubemodel);
@@ -776,6 +795,13 @@ void playGame()
             glUniform1i(object_id_uniform, BUNNY);
             DrawVirtualObject("bunny");
 
+            model = Matrix_Translate(1.0f,2.0f,0.0f)
+                    * Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f);
+            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(object_id_uniform, BUNNY);
+            DrawVirtualObject("cube");
+
+
             model = Matrix_Translate(0.0f,-1.0f,0.0f)
                     * Matrix_Scale(100.0, 1.0, 100.0);
             glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
@@ -826,8 +852,12 @@ void playGame()
             glUniform1i(object_id_uniform, AIM);
             DrawVirtualObject("plane");
 
+
+
             for(int i = 0; i < (int) cubos.size(); i++)
             {
+
+                draw5Enemies(glm::vec3(cubos[i].x,cubos[i].y,cubos[i].z), cubos[i].dy, cubos[i].dx);
                 model = Matrix_Translate(cubos[i].x,cubos[i].y,cubos[i].z)
                         * Matrix_Scale(cubos[i].dx * 0.9,cubos[i].dy,cubos[i].dz * 0.9);
                 glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
@@ -968,6 +998,83 @@ void playGame()
 
         whileTime = (glfwGetTime() * 10) - actualSecond;
     }
+}
+
+void draw3Enemies(glm::vec3 cubeCenter, float cubeHeight, float cubeRadius){
+
+  glm::mat4 model = Matrix_Identity();
+
+  model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(2 * 3.14/3 + glfwGetTime()),
+                           cubeCenter[1] + cubeHeight/2,
+                           cubeCenter[2] + cubeRadius*cos(2 * 3.14/3 + glfwGetTime()))
+          * Matrix_Scale(0.125f, 0.125f, 0.125f);
+  glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(object_id_uniform, ARROW);
+            DrawVirtualObject("clyde");
+
+
+  model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(4 * 3.14/3 + glfwGetTime()),
+                           cubeCenter[1] + cubeHeight/2,
+                           cubeCenter[2] + cubeRadius*cos(4 * 3.14/3 + glfwGetTime()))
+          * Matrix_Scale(0.25f, 0.25f, 0.25f);
+  glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(object_id_uniform, AIM);
+            DrawVirtualObject("pinky");
+
+  model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(2 * 3.14 + glfwGetTime()),
+                 cubeCenter[1] + cubeHeight/2,
+                 cubeCenter[2] + cubeRadius*cos(3.14/2 + glfwGetTime()))
+          * Matrix_Scale(0.25f, 0.25f, 0.25f);
+  glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(object_id_uniform, ARM);
+            DrawVirtualObject("inky");
+}
+
+void draw5Enemies(glm::vec3 cubeCenter, float cubeHeight, float cubeRadius){
+
+  glm::mat4 model = Matrix_Identity();
+
+  model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(2 * 3.14/5 + glfwGetTime()),
+                           cubeCenter[1] + cubeHeight/2,
+                           cubeCenter[2] + cubeRadius*cos(2 * 3.14/5 + glfwGetTime()))
+          * Matrix_Scale(0.25f, 0.25f, 0.25f);
+  glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(object_id_uniform, ARROW);
+            DrawVirtualObject("clyde");
+
+
+  model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(4 * 3.14/5 + glfwGetTime()),
+                           cubeCenter[1] + cubeHeight/2,
+                           cubeCenter[2] + cubeRadius*cos(4 * 3.14/5 + glfwGetTime()))
+          * Matrix_Scale(0.25f, 0.25f, 0.25f);
+  glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(object_id_uniform, AIM);
+            DrawVirtualObject("pinky");
+
+  model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(6 * 3.14/5 + glfwGetTime()),
+                 cubeCenter[1] + cubeHeight/2,
+                 cubeCenter[2] + cubeRadius*cos(6 * 3.14/5 + glfwGetTime()))
+          * Matrix_Scale(0.25f, 0.25f, 0.25f);
+  glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(object_id_uniform, ARM);
+            DrawVirtualObject("inky");
+
+  model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(8 * 3.14/5 + glfwGetTime()),
+                 cubeCenter[1] + cubeHeight/2,
+                 cubeCenter[2] + cubeRadius*cos(8 * 3.14/5 + glfwGetTime()))
+          * Matrix_Scale(0.25f, 0.25f, 0.25f);
+  glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(object_id_uniform, ARROW);
+            DrawVirtualObject("clyde");
+
+
+  model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(2 * 3.14 + glfwGetTime()),
+                           cubeCenter[1] + cubeHeight/2,
+                           cubeCenter[2] + cubeRadius*cos(2 * 3.14 + glfwGetTime()))
+          * Matrix_Scale(0.25f, 0.25f, 0.25f);
+  glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(object_id_uniform, AIM);
+            DrawVirtualObject("pinky");
 }
 
 // Função que carrega uma imagem para ser utilizada como textura
