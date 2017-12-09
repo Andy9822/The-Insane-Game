@@ -60,6 +60,10 @@
 #define INITIAL_PHI -0.465
 #define ALTURAHERO 1.9f
 #define START_POSITION glm::vec4(14.0f ,2.16f + ALTURAHERO, -26.0f, 1.0f)
+#define MAX_THETA_MENU 0.7
+#define MIN_THETA_MENU -0.7
+#define MAX_PHI_MENU 0.5
+#define MIN_PHI_MENU -0.5
 
 #define SPHERE 0
 #define BUNNY  1
@@ -150,6 +154,7 @@ GLuint CreateGpuProgram(GLuint vertex_shader_id, GLuint fragment_shader_id); // 
 void PrintObjModelInfo(ObjModel*); // Função para debugging
 void playGame();
 int menu();
+void angleLimits();
 
 // Declaração de funções auxiliares para renderizar texto dentro da janela
 // OpenGL. Estas funções estão definidas no arquivo "textrendering.cpp".
@@ -187,11 +192,11 @@ void atualizaPulo();
 void testaChao(float novoX,float novoZ,unsigned int *startFall,unsigned int actualSecond,std::vector<Cubo> cubos);
 void trataColisaoCubo(float novoX,float antigoY,float novoZ, int nearest,bool *invadiuObjeto,std::vector<Cubo> cubos);
 bool processaPouso(float antigoY,float cuboY,float cuboDY,float correcao);
-void processaMovimentos(bool WASD,float antigoX,float *novoX,float antigoZ,float *novoZ,float antigoY,std::vector<Cubo> cubos, glm::vec4 teleportPos);
+void processaMovimentos(bool WASD,float antigoX,float *novoX,float antigoZ,float *novoZ,float antigoY,std::vector<Cubo> &cubos, glm::vec4 teleportPos);
 void aplicaGravidade();
 void processaColisao(float novoX,float antigoY,float novoZ,bool *invadiuObjeto,std::vector<Cubo> cubos);
 int cuboProximo(float novoX,float antigoY,float novoZ,std::vector<Cubo> cubos);
-void resetLife(float *novoX,float *novoZ);
+void resetLife(float *novoX,float *novoZ,std::vector<Cubo> &cubos);
 ArrowType selectArrowType();
 void handleTeleport(float * novoX,float * novoZ,std::vector<Cubo> cubos, glm::vec4 teleportPos);
 
@@ -264,16 +269,20 @@ bool pressR = false;
 bool pressE = false;
 bool pressSpace = false;
 bool JUMPING = false;
+bool DOUBLEJUMPING = false;
+bool MAGICPLATFORM = false;
 bool CAINDO = false;
-bool TELEPORT = false;
+bool TELEPORTED = false;
 float gravidade = 0.005;
 int oldCubo = 0;
 int startJump = 0;
 double actualSecond;
 double whileTime;
 unsigned int startFall = 0;
-bool hasTeleported = false;
 bool enterPressed = false;
+bool busyWKey = false;
+bool busySKey = false;
+bool busyJUMPKey = false;
 
 ///Variaveis tiradas de serem globais
 bool WASD = false;
@@ -504,12 +513,14 @@ int menu()
 
         if(selectionTime == 0)
         {
-            if(pressW && selectPos > 0)
+            if(pressW && !busyWKey && selectPos > 0)
             {
+                busyWKey = true;
                 selectPos--;
             }
-            if(pressS && selectPos < 2)
+            if(pressS && !busySKey && selectPos < 2)
             {
+                busySKey = true;
                 selectPos++;
             }
 
@@ -541,6 +552,8 @@ int menu()
         // e também resetamos todos os pixels do Z-buffer (depth buffer).
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        angleLimits();
+
         glUseProgram(program_id);
         float r = g_CameraDistance;
         float y = r*sin(g_CameraPhi);
@@ -557,7 +570,6 @@ int menu()
         u = crossproduct(camera_up_vector, w);
         w = w/norm(w);
         u = u/norm(u);
-        glm::vec4 v = crossproduct(w,u);
 
         // Computamos a matriz "View" utilizando os parâmetros da câmera para
         // definir o sistema de coordenadas da câmera.  Veja slide 169 do
@@ -645,7 +657,7 @@ void playGame()
 
     std::vector<Arrow> arrows;
 
-    resetLife(&novoX, &novoZ);
+    resetLife(&novoX, &novoZ,cubos);
 
     ArrowType arrowType = normal;
     glm::vec4 teleportPosition;
@@ -832,6 +844,7 @@ void playGame()
                 cubos[cubos.size()-1].x = plataformArrowPosition->x;
                 cubos[cubos.size()-1].y = plataformArrowPosition->y;
                 cubos[cubos.size()-1].z = plataformArrowPosition->z;
+                MAGICPLATFORM = true;
             }
 
             if(charging && (stretchCount/5)+1 < 20)
@@ -912,7 +925,7 @@ void playGame()
                         }
                         else if(arrows[i].type == teleport){
                             teleportPosition = arrows[i].pos;
-                            TELEPORT = true;
+                            TELEPORTED = true;
                             engine->play2D("../../audio/teleport.wav", false);
                         }
 
@@ -1706,7 +1719,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     }
 
     ///Teste de se apertou alguma das teclas WASD ou SPACE
-    if (key == GLFW_KEY_W && action == GLFW_PRESS)
+    if ( (key == GLFW_KEY_W || key == GLFW_KEY_UP ) && action == GLFW_PRESS)
     {
         pressW = true;
     }
@@ -1716,7 +1729,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
         pressA = true;
     }
 
-    if (key == GLFW_KEY_S && action == GLFW_PRESS)
+    if ( (key == GLFW_KEY_S || key == GLFW_KEY_DOWN ) && action == GLFW_PRESS)
     {
         pressS = true;
     }
@@ -1729,17 +1742,24 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
     {
         pressSpace = true;
+        if(!JUMPING)
+        {
+            busyJUMPKey = true;
+        }
+
     }
 
     ///Teste de se deixou de apertar alguma das teclas WASD ou SPACE
-    if (key == GLFW_KEY_W && action == GLFW_RELEASE)
+    if ( (key == GLFW_KEY_W || key == GLFW_KEY_UP ) && action == GLFW_RELEASE)
     {
         pressW = false;
+        busyWKey = false;
     }
 
-    if (key == GLFW_KEY_S && action == GLFW_RELEASE)
+    if ((key == GLFW_KEY_S || key == GLFW_KEY_DOWN ) && action == GLFW_RELEASE)
     {
         pressS = false;
+        busySKey = false;
     }
 
     if (key == GLFW_KEY_A && action == GLFW_RELEASE)
@@ -1779,6 +1799,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE)
     {
         pressSpace = false;
+        busyJUMPKey = false;
     }
 }
 
@@ -2071,7 +2092,7 @@ void PrintObjModelInfo(ObjModel* model)
 /// ---------------------------------------------------------------------------------------
 ///Funcoes implementadas pelo Andy
 
-void resetLife(float *novoX,float *novoZ)
+void resetLife(float *novoX,float *novoZ,std::vector<Cubo> &cubos)
 {
     camera_position_c = START_POSITION;
     CAINDO = false;
@@ -2079,6 +2100,10 @@ void resetLife(float *novoX,float *novoZ)
     *novoZ = camera_position_c.z;
     g_CameraTheta = INITIAL_THETA;
     g_CameraPhi = INITIAL_PHI;
+
+    cubos[cubos.size()-1].x = 0;
+    cubos[cubos.size()-1].y = 0;
+    cubos[cubos.size()-1].z = 0;
 }
 
 ///Testa se uma coordenada de 1 dos eixos (x y ou z ) da camera esta entre o maior e menor valor dessa
@@ -2139,6 +2164,11 @@ void atualizaPulo()
         JUMPING = true;
         startJump = actualSecond;
 
+    }
+    else if(JUMPING && !DOUBLEJUMPING && !busyJUMPKey)
+    {
+        DOUBLEJUMPING = true;
+        startJump = actualSecond;
     }
 }
 
@@ -2264,17 +2294,17 @@ bool processaPouso(float antigoY,float cuboY,float cuboDY,float correcao)
 }
 
 /// Sepa processa os Movimentos, desconfio pelo nome da funcao
-void processaMovimentos(bool WASD,float antigoX,float * novoX,float antigoZ,float * novoZ,float antigoY,std::vector<Cubo> cubos, glm::vec4 teleportPos)
+void processaMovimentos(bool WASD,float antigoX,float * novoX,float antigoZ,float * novoZ,float antigoY,std::vector<Cubo> &cubos, glm::vec4 teleportPos)
 {
     antigoY = camera_position_c.y;
 
-    if(TELEPORT)
+    if(TELEPORTED)
         handleTeleport(novoX, novoZ, cubos, teleportPos);
 
-    if(WASD || CAINDO || JUMPING)
+    if(WASD || CAINDO || JUMPING || MAGICPLATFORM)
     {
         bool invadiuObjeto = false;
-
+        MAGICPLATFORM = false;
         if(!CAINDO && !JUMPING)
         {
             testaChao(*novoX,*novoZ,&startFall,actualSecond,cubos);
@@ -2287,9 +2317,8 @@ void processaMovimentos(bool WASD,float antigoX,float * novoX,float antigoZ,floa
 
         if(DIED && enterPressed)
         {
-            std::cout << "YOU DIED\n";
             enterPressed = false;
-            resetLife(novoX,novoZ);
+            resetLife(novoX,novoZ,cubos);
             CAINDO = false;
         }
         else if(!invadiuObjeto)
@@ -2330,8 +2359,34 @@ void handleTeleport(float * novoX,float * novoZ, std::vector<Cubo> cubos, glm::v
 
         CAINDO = false;
         JUMPING = false;
-        TELEPORT = false;
+        DOUBLEJUMPING = false;
+        TELEPORTED = false;
     }
+
+}
+
+void angleLimits()
+{
+
+    if(g_CameraTheta > MAX_THETA_MENU)
+    {
+        g_CameraTheta = MAX_THETA_MENU;
+    }
+    else if(g_CameraTheta < MIN_THETA_MENU)
+    {
+        g_CameraTheta = MIN_THETA_MENU;
+    }
+
+    if(g_CameraPhi > MAX_PHI_MENU)
+    {
+        g_CameraPhi = MAX_PHI_MENU;
+    }
+    else if(g_CameraPhi < MIN_PHI_MENU)
+    {
+        g_CameraPhi = MIN_PHI_MENU;
+    }
+
+
 
 }
 
@@ -2344,6 +2399,7 @@ void aplicaGravidade()
         if(actualSecond - startJump > 3)
         {
             JUMPING = false;
+            DOUBLEJUMPING = false;
             CAINDO = true;
             startFall = actualSecond;
         }
