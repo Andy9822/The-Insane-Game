@@ -28,6 +28,8 @@ uniform mat4 projection;
 #define ARROW 6
 #define ARROWT 7
 #define ARROWP 8
+#define GHOST 9
+
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -39,6 +41,7 @@ uniform sampler2D TextureImage0;
 uniform sampler2D TextureImage1;
 uniform sampler2D TextureImage2;
 uniform sampler2D TextureImage3;
+uniform sampler2D TextureImage4;
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec3 color;
@@ -49,6 +52,17 @@ out vec3 color;
 
 void main()
 {
+    vec4 bbox_center;
+
+    float minx = bbox_min.x;
+    float maxx = bbox_max.x;
+
+    float miny = bbox_min.y;
+    float maxy = bbox_max.y;
+
+    float minz = bbox_min.z;
+    float maxz = bbox_max.z;
+
     // Obtemos a posição da câmera utilizando a inversa da matriz que define o
     // sistema de coordenadas da câmera.
     vec4 origin = vec4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -107,8 +121,8 @@ void main()
             break;
 
         case ARM:
-            U = texcoords.x;
-            V = texcoords.y;
+            U = (position_model.x - minx)/(maxx - minx) ;
+            V = (position_model.y - miny)/(maxy - miny) ;
             Kd = texture(TextureImage2, vec2(U,V)).rgb;
             Ks = vec3(0.0f, 0.0f, 0.0f);
             Ka = Kd / 2;
@@ -129,7 +143,7 @@ void main()
             //   constante M_PI
             //   variável position_model
 
-            vec4 bbox_center = (bbox_min + bbox_max) / 2.0;
+            bbox_center = (bbox_min + bbox_max) / 2.0;
             p = position_model - bbox_center;
             float ro = length(p);
             float teta = atan(p.x, p.z);
@@ -153,15 +167,6 @@ void main()
             // as coordenadas de textura U e V dentro do intervalo [0,1]. Para
             // tanto, veja por exemplo o mapeamento da variável 'h' no slide 149 do
             // documento "Aula_20_e_21_Mapeamento_de_Texturas.pdf".
-
-            float minx = bbox_min.x;
-            float maxx = bbox_max.x;
-
-            float miny = bbox_min.y;
-            float maxy = bbox_max.y;
-
-            float minz = bbox_min.z;
-            float maxz = bbox_max.z;
 
             U = (position_model.x - minx)/(maxx - minx) ;
             V = (position_model.y - miny)/(maxy - miny) ;
@@ -199,6 +204,17 @@ void main()
             Ka = Kd/2;
             q = 10.0;
             break;
+
+        case GHOST:
+
+            U = texcoords.x;
+            V = texcoords.y;
+            Kd = texture(TextureImage4, vec2(U,V)).rgb;
+            Ks = vec3(0.0f, 0.0f, 0.0f);
+            Ka = Kd / 2;
+            q = 1;
+            break;
+
 
         default:
             Kd = vec3(0.08f, 0.7f, 1.0f);

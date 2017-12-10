@@ -9,15 +9,20 @@
 struct Enemy{
     glm::vec4 pos;
     glm::vec3 scale;
+    bool fixed;
+    float rotation_Y;
     std::string name;
 
-    Enemy(glm::vec4 p){
+    Enemy(glm::vec4 p, bool isFixed, char enemyName[]){
+        fixed = isFixed;
+        rotation_Y = 0;
         pos = p;
         scale = glm::vec3(0.25f, 0.25f, 0.25f);
-        name = "inky";
+        name = enemyName;
     }
 };
 
 void updateEnemy(Enemy *e, glm::vec4 camera_pos, float timeElapsed);
+
 
 #endif // ENEMY_H_INCLUDED

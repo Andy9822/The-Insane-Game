@@ -30,6 +30,8 @@
 #include <stdexcept>
 #include <algorithm>
 #include <iostream>
+#include <time.h>
+#include <random>
 
 // Headers das bibliotecas OpenGL
 #include <glad/glad.h>   // Criação de contexto OpenGL 3.3
@@ -75,6 +77,7 @@
 #define ARROW 6
 #define ARROWT 7
 #define ARROWP 8
+#define GHOST 9
 using namespace std;
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
@@ -125,8 +128,9 @@ struct Cubo
     float dx;
     float dy;
     float dz;
+    bool hidden;
 
-    Cubo(float x1, float y1, float z1, float dx1, float dy1, float dz1)
+    Cubo(float x1, float y1, float z1, float dx1, float dy1, float dz1, bool hideCube)
     {
         x = x1;
         y = y1;
@@ -134,6 +138,7 @@ struct Cubo
         dx = dx1;
         dy = dx1;
         dz = dz1;
+        hidden = hideCube;
     }
 };
 
@@ -187,6 +192,7 @@ void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 ///Element drawing
 void draw3Enemies(glm::vec3 cubeCenter, float cubeHeight, float cubeRadius);
 void draw5Enemies(glm::vec3 cubeCenter, float cubeHeight, float cubeRadius);
+void createEnemies(int numEnemies, std::vector<Enemy> enemies);
 
 ///Prototipos das funcoes feitas pelo Andy
 bool entreLimites(float posCamera, float eixo, float delta,float erro);
@@ -405,7 +411,8 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/tc-earth_daymap_surface.jpg");      // TextureImage0
     LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif"); // TextureImage1
     LoadTextureImage("../../data/skin.jpg");      // TextureImage2
-    LoadTextureImage("../../data/beach-wood--texture.jpg");      // TextureImage3
+    LoadTextureImage("../../data/bowText.jpg");      // TextureImage3
+    LoadTextureImage("../../data/ghost/ghostText.png");      // TextureImage
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     ObjModel spheremodel("../../data/sphere.obj");
@@ -443,6 +450,11 @@ int main(int argc, char* argv[])
     ObjModel cubemodel("../../data/cube.obj");
     ComputeNormals(&cubemodel);
     BuildTrianglesAndAddToVirtualScene(&cubemodel);
+
+
+    ObjModel ghostmodel("../../data/ghost/ghostOBJ.obj");
+    ComputeNormals(&ghostmodel);
+    BuildTrianglesAndAddToVirtualScene(&ghostmodel);
 
     for(int i = 1; i<=9; i++)
     {
@@ -630,14 +642,15 @@ int menu()
         glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
         model = Matrix_Translate(camera_position_c[0],
                                  camera_position_c[1],
-                                 camera_position_c[2] + 2);
+                                 camera_position_c[2] + 2)
+                                 * Matrix_Rotate_Y((float)glfwGetTime() * 0.1f);;
         // Enviamos as matrizes "view" e "projection" para a placa de vídeo
         // (GPU). Veja o arquivo "shader_vertex.glsl", onde estas são
         // efetivamente aplicadas em todos os pontos.
         glUniformMatrix4fv(view_uniform, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(projection_uniform, 1, GL_FALSE, glm::value_ptr(projection));
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1i(object_id_uniform, SPHERE);
+        glUniform1i(object_id_uniform, BUNNY);
         DrawVirtualObject("cow");
 
         TextRendering_PrintString(window, "Start", 0.0f, startPos, startSize);
@@ -660,27 +673,51 @@ int menu()
 
 }
 
+void createEnemies(int numEnemies, std::vector<Enemy>* enemies){
+
+    srand(time(NULL));
+
+    float randomx;
+    float diffx;
+    float rx;
+    float randomz;
+    float diffz;
+    float rz;
+
+    for(int i = 0; i < numEnemies; i++){
+        randomx = ((float) rand()) / (float) RAND_MAX;
+        diffx = 100.0f;
+        rx = randomx * diffx;
+        if(i%2 == 0){
+          rx = -rx;
+        }
+        randomz = ((float) rand()) / (float) RAND_MAX;
+        diffz = 100.0f;
+        rz = randomz * diffz;
+        if(i%4 == 0){
+          rz = -rz;
+        }
+        enemies->push_back(Enemy(glm::vec4(rx, 30.0f, rz, 1.0f), false, "ghost"));
+    }
+}
 
 void playGame()
 {
-    int arrowRateController = 0;
+    float enemiesSpawnController = glfwGetTime();
+    int arrowRateController = glfwGetTime();
     enterPressed = false;
     std::vector<Cubo> cubos;
-    cubos.push_back(Cubo(-1.5f, 0.6f, 0.0f, 4.0f, 1.0f, 4.0f));
-    cubos.push_back(Cubo(4.0f, 1.2f, 0.0f, 4.0f, 4.0f, 4.0f));
-    cubos.push_back(Cubo(7.5f, 0.12f, -7.5f, 4.0f, 4.0f, 4.0f));
-    cubos.push_back(Cubo(14.0f, 0.16f, -20.5f, 4.0f, 4.0f, 12.0f));
-    cubos.push_back(Cubo(7.5f, 0.9f, -20.5f, 5.0f, 1.0f, 1.9f));
-    cubos.push_back(Cubo(3.5f, 0.9f, -16.5f, 1.9f, 1.0f, 5.0f));
+    cubos.push_back(Cubo(-1.5f, 0.6f, 0.0f, 4.0f, 1.0f, 4.0f, false));
+    cubos.push_back(Cubo(4.0f, 1.2f, 0.0f, 4.0f, 4.0f, 4.0f, false));
+    cubos.push_back(Cubo(7.5f, 0.12f, -7.5f, 4.0f, 4.0f, 4.0f, false));
+    cubos.push_back(Cubo(14.0f, 0.16f, -20.5f, 4.0f, 4.0f, 12.0f, false));
+    cubos.push_back(Cubo(7.5f, 0.9f, -20.5f, 5.0f, 1.0f, 1.9f, false));
+    cubos.push_back(Cubo(3.5f, 0.9f, -16.5f, 1.9f, 1.0f, 5.0f, false));
 
-    cubos.push_back(Cubo(0,0,0,1,1,1)); // Cubo usado para criar plataforma
+    cubos.push_back(Cubo(0,0,0,1,1,1, false)); // Cubo usado para criar plataforma
 
     std::vector<Arrow> arrows;
     std::vector<Enemy> enemies;
-
-    for(int i = 0; i < 10; i++){
-        enemies.push_back(Enemy(glm::vec4(10*i+60.0f, 30.0f, 10.0f, 0.0f)));
-    }
 
     resetLife(&novoX, &novoZ, cubos);
 
@@ -860,21 +897,34 @@ void playGame()
 
             for(unsigned i = 0; i < cubos.size(); i++)
             {
-                //draw5Enemies(glm::vec3(cubos[i].x,cubos[i].y,cubos[i].z), cubos[i].dy, cubos[i].dx);
-                model = Matrix_Translate(cubos[i].x,cubos[i].y,cubos[i].z)
-                        * Matrix_Scale(cubos[i].dx * 0.9,cubos[i].dy,cubos[i].dz * 0.9);
-                glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-                glUniform1i(object_id_uniform, AIM);
-                DrawVirtualObject("cube");
+                if(!cubos[i].hidden){
+                  //draw5Enemies(glm::vec3(cubos[i].x,cubos[i].y,cubos[i].z), cubos[i].dy, cubos[i].dx);
+                  model = Matrix_Translate(cubos[i].x,cubos[i].y,cubos[i].z)
+                          * Matrix_Scale(cubos[i].dx * 0.9,cubos[i].dy,cubos[i].dz * 0.9);
+                  glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+                  glUniform1i(object_id_uniform, AIM);
+                  DrawVirtualObject("cube");
+                }
             }
 
+            if(enemies.size() == 0){
+                createEnemies(10, &enemies);
+
+            }
             for(unsigned i = 0; i < enemies.size(); i++){
+
+
                   updateEnemy(&enemies[i], camera_position_c, whileTime);
 
+                  float angle = atan2((enemies[i].pos.x - camera_position_c.x), (enemies[i].pos.z - camera_position_c.z));
+
+                  enemies[i].rotation_Y = angle;
+
                   model = Matrix_Translate(enemies[i].pos.x, enemies[i].pos.y, enemies[i].pos.z)
+                         * Matrix_Rotate_Y(enemies[i].rotation_Y + 3.14)
                          * Matrix_Scale(enemies[i].scale.x, enemies[i].scale.y, enemies[i].scale.z);
                   glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-                  glUniform1i(object_id_uniform, ARM);
+                  glUniform1i(object_id_uniform, GHOST);
                   DrawVirtualObject(enemies[i].name.c_str());
             }
 
@@ -1245,6 +1295,8 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(program_id, "TextureImage0"), 0);
     glUniform1i(glGetUniformLocation(program_id, "TextureImage1"), 1);
     glUniform1i(glGetUniformLocation(program_id, "TextureImage2"), 2);
+    glUniform1i(glGetUniformLocation(program_id, "TextureImage3"), 3);
+    glUniform1i(glGetUniformLocation(program_id, "TextureImage4"), 4);
     glUseProgram(0);
 }
 
