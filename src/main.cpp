@@ -907,6 +907,8 @@ void playGame()
                           * Matrix_Scale(cubos[i].dx * 0.9,cubos[i].dy,cubos[i].dz * 0.9);
                   glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
 
+                  ///Switch com o texture code de cada cubo. Talez podesse ser chamado so uma vez o glUniform so dai
+                  /// escolher qual textureImage mandar.
                   switch (cubos[i].textureCode){
                     case 0:
                         glUniform1i(object_id_uniform, CUBE);
