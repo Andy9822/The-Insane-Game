@@ -217,24 +217,20 @@ void main()
             q = 1;
             break;
 
+        ///Foram feitos 3 cases de cubo. Talvez podesse fazer um so e ver como troca entre textureImage usada.
         case CUBE:
             U = (position_model.x - minx)/(maxx - minx) ;
             V = (position_model.y - miny)/(maxy - miny) ;
-
-
             Kd = texture(TextureImage5, vec2(U,V)).rgb;
-            //Kd = vec3(1.0f, 0.5f, 0.0f);///Cor da plataforma
             Ks = vec3(0.0f,0.0f,0.0f);
             Ka = Kd/2;
             q = 1;
             break;
         case CUBE1:
+        
             U = (position_model.x - minx)/(maxx - minx) ;
             V = (position_model.y - miny)/(maxy - miny) ;
-
-
             Kd = texture(TextureImage6, vec2(U,V)).rgb;
-            //Kd = vec3(1.0f, 0.5f, 0.0f);///Cor da plataforma
             Ks = vec3(0.0f,0.0f,0.0f);
             Ka = Kd/2;
             q = 1;
@@ -243,10 +239,7 @@ void main()
         case CUBE2:
             U = (position_model.x - minx)/(maxx - minx) ;
             V = (position_model.y - miny)/(maxy - miny) ;
-
-
             Kd = texture(TextureImage7, vec2(U,V)).rgb;
-            //Kd = vec3(1.0f, 0.5f, 0.0f);///Cor da plataforma
             Ks = vec3(0.0f,0.0f,0.0f);
             Ka = Kd/2;
             q = 1;
