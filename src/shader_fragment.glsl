@@ -1,5 +1,4 @@
 #version 330 core
-
 // Atributos de fragmentos recebidos como entrada ("in") pelo Fragment Shader.
 // Neste exemplo, este atributo foi gerado pelo rasterizador como a
 // interpolação da cor de cada vértice, definidas em "shader_vertex.glsl" e
@@ -29,7 +28,9 @@ uniform mat4 projection;
 #define ARROWT 7
 #define ARROWP 8
 #define GHOST 9
-
+#define CUBE 10
+#define CUBE1 11
+#define CUBE2 12
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -42,7 +43,9 @@ uniform sampler2D TextureImage1;
 uniform sampler2D TextureImage2;
 uniform sampler2D TextureImage3;
 uniform sampler2D TextureImage4;
-
+uniform sampler2D TextureImage5;
+uniform sampler2D TextureImage6;
+uniform sampler2D TextureImage7;
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec3 color;
 
@@ -96,7 +99,6 @@ void main()
     // Coordenadas de textura U e V
     float U = 0.0;
     float V = 0.0;
-
     switch(object_id){
 
         case ARROW:
@@ -212,6 +214,41 @@ void main()
             Kd = texture(TextureImage4, vec2(U,V)).rgb;
             Ks = vec3(0.0f, 0.0f, 0.0f);
             Ka = Kd / 2;
+            q = 1;
+            break;
+
+        case CUBE:
+            U = (position_model.x - minx)/(maxx - minx) ;
+            V = (position_model.y - miny)/(maxy - miny) ;
+
+
+            Kd = texture(TextureImage5, vec2(U,V)).rgb;
+            //Kd = vec3(1.0f, 0.5f, 0.0f);///Cor da plataforma
+            Ks = vec3(0.0f,0.0f,0.0f);
+            Ka = Kd/2;
+            q = 1;
+            break;
+        case CUBE1:
+            U = (position_model.x - minx)/(maxx - minx) ;
+            V = (position_model.y - miny)/(maxy - miny) ;
+
+
+            Kd = texture(TextureImage6, vec2(U,V)).rgb;
+            //Kd = vec3(1.0f, 0.5f, 0.0f);///Cor da plataforma
+            Ks = vec3(0.0f,0.0f,0.0f);
+            Ka = Kd/2;
+            q = 1;
+            break;
+
+        case CUBE2:
+            U = (position_model.x - minx)/(maxx - minx) ;
+            V = (position_model.y - miny)/(maxy - miny) ;
+
+
+            Kd = texture(TextureImage7, vec2(U,V)).rgb;
+            //Kd = vec3(1.0f, 0.5f, 0.0f);///Cor da plataforma
+            Ks = vec3(0.0f,0.0f,0.0f);
+            Ka = Kd/2;
             q = 1;
             break;
 

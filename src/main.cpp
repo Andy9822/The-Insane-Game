@@ -78,6 +78,9 @@
 #define ARROWT 7
 #define ARROWP 8
 #define GHOST 9
+#define CUBE 10
+#define CUBE1 11
+#define CUBE2 12
 using namespace std;
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
@@ -128,16 +131,18 @@ struct Cubo
     float dx;
     float dy;
     float dz;
+    int textureCode;
     bool hidden;
 
-    Cubo(float x1, float y1, float z1, float dx1, float dy1, float dz1, bool hideCube)
+    Cubo(float x1, float y1, float z1, float dx1, float dy1, float dz1, int code, bool hideCube)
     {
         x = x1;
         y = y1;
         z = z1;
         dx = dx1;
-        dy = dx1;
+        dy = dy1;
         dz = dz1;
+        textureCode = code;
         hidden = hideCube;
     }
 };
@@ -200,15 +205,17 @@ bool caiuDemais(float antigoEixo,float novoEixo, float posEixo, float delta, flo
 void processaWASD(float *novoX,float antigoX,float *novoZ,float antigoZ,float deslocamento,glm::vec4 u,glm::vec4 w);
 void atualizaPulo();
 void testaChao(float novoX,float novoZ,unsigned int *startFall,unsigned int actualSecond,std::vector<Cubo> cubos);
-void trataColisaoCubo(float novoX,float antigoY,float novoZ, int nearest,bool *invadiuObjeto,std::vector<Cubo> cubos);
+void trataColisaoCubo(float novoX,float antigoY,float novoZ, int nearestCube,bool *invadiuObjeto,std::vector<Cubo> cubos);
 bool processaPouso(float antigoY,float cuboY,float cuboDY,float correcao);
 void processaMovimentos(bool WASD,float antigoX,float *novoX,float antigoZ,float *novoZ,float antigoY,std::vector<Cubo> &cubos, glm::vec4 teleportPos);
 void aplicaGravidade();
 void processaColisao(float novoX,float antigoY,float novoZ,bool *invadiuObjeto,std::vector<Cubo> cubos);
-int cuboProximo(float novoX,float antigoY,float novoZ,std::vector<Cubo> cubos);
+int getNearestCube(float novoX,float antigoY,float novoZ,std::vector<Cubo> cubos);
 void resetLife(float *novoX,float *novoZ,std::vector<Cubo> &cubos);
 ArrowType selectArrowType();
 void handleTeleport(float * novoX,float * novoZ,std::vector<Cubo> cubos, glm::vec4 teleportPos);
+void loadCubesPositions(std::vector<Cubo> &cubos);
+
 
 // Variáveis que definem um programa de GPU (shaders). Veja função LoadShadersFromFiles().
 GLuint vertex_shader_id;
@@ -412,7 +419,11 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif"); // TextureImage1
     LoadTextureImage("../../data/skin.jpg");      // TextureImage2
     LoadTextureImage("../../data/bowText.jpg");      // TextureImage3
-    LoadTextureImage("../../data/ghost/ghostText.png");      // TextureImage
+    LoadTextureImage("../../data/ghost/ghostText.png");      // TextureImage4
+
+    LoadTextureImage("../../data/cube/hazard.jpg");      // TextureImage5
+    LoadTextureImage("../../data/cube/bloc.jpg");      // TextureImage5
+    LoadTextureImage("../../data/cube/box2.jpg");      // TextureImage5
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     ObjModel spheremodel("../../data/sphere.obj");
@@ -707,14 +718,7 @@ void playGame()
     int arrowRateController = glfwGetTime();
     enterPressed = false;
     std::vector<Cubo> cubos;
-    cubos.push_back(Cubo(-1.5f, 0.6f, 0.0f, 4.0f, 1.0f, 4.0f, false));
-    cubos.push_back(Cubo(4.0f, 1.2f, 0.0f, 4.0f, 4.0f, 4.0f, false));
-    cubos.push_back(Cubo(7.5f, 0.12f, -7.5f, 4.0f, 4.0f, 4.0f, false));
-    cubos.push_back(Cubo(14.0f, 0.16f, -20.5f, 4.0f, 4.0f, 12.0f, false));
-    cubos.push_back(Cubo(7.5f, 0.9f, -20.5f, 5.0f, 1.0f, 1.9f, false));
-    cubos.push_back(Cubo(3.5f, 0.9f, -16.5f, 1.9f, 1.0f, 5.0f, false));
-
-    cubos.push_back(Cubo(0,0,0,1,1,1, false)); // Cubo usado para criar plataforma
+    loadCubesPositions(cubos);
 
     std::vector<Arrow> arrows;
     std::vector<Enemy> enemies;
@@ -841,7 +845,7 @@ void playGame()
             model = Matrix_Translate(1.0f,2.0f,0.0f)
                     * Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f);
             glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-            glUniform1i(object_id_uniform, BUNNY);
+            glUniform1i(object_id_uniform, CUBE);
             DrawVirtualObject("cube");
 
 
@@ -902,7 +906,18 @@ void playGame()
                   model = Matrix_Translate(cubos[i].x,cubos[i].y,cubos[i].z)
                           * Matrix_Scale(cubos[i].dx * 0.9,cubos[i].dy,cubos[i].dz * 0.9);
                   glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-                  glUniform1i(object_id_uniform, AIM);
+
+                  switch (cubos[i].textureCode){
+                    case 0:
+                        glUniform1i(object_id_uniform, CUBE);
+                        break;
+                    case 1:
+                        glUniform1i(object_id_uniform, CUBE1);
+                        break;
+                    case 2:
+                        glUniform1i(object_id_uniform, CUBE2);
+
+                }
                   DrawVirtualObject("cube");
                 }
             }
@@ -1297,6 +1312,9 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(program_id, "TextureImage2"), 2);
     glUniform1i(glGetUniformLocation(program_id, "TextureImage3"), 3);
     glUniform1i(glGetUniformLocation(program_id, "TextureImage4"), 4);
+    glUniform1i(glGetUniformLocation(program_id, "TextureImage5"), 5);
+    glUniform1i(glGetUniformLocation(program_id, "TextureImage6"), 6);
+    glUniform1i(glGetUniformLocation(program_id, "TextureImage7"), 7);
     glUseProgram(0);
 }
 
@@ -2349,7 +2367,7 @@ void processaWASD(float *novoX,float antigoX,float *novoZ,float antigoZ,float de
 
 }
 
-///Atualiza quando comeca/acaba o pulo
+///Atualiza quando comeca/acaba o pulo e doublepulo
 void atualizaPulo()
 {
     if (!JUMPING &&!CAINDO)
@@ -2387,34 +2405,36 @@ void testaChao(float novoX,float novoZ,unsigned int *startFall,unsigned int actu
 
 
 ///Funcao principal de tratar colisao. Deriva em varias funcoes menores para cada ocasiao especifica
-void trataColisaoCubo(float novoX,float antigoY,float novoZ, int nearest,bool *invadiuObjeto,std::vector<Cubo> cubos)
+void trataColisaoCubo(float novoX,float antigoY,float novoZ, int nearestCube,bool *invadiuObjeto,std::vector<Cubo> cubos)
 {
-    ///Nao documentei todos os casos dessa funcao pq ela esta incompleta ou daria pra colocar 1 caso mais especifico
-    if(nearest == oldCubo)
+    ///Se ele permanecceu nos limites do mesmo cubo, ou ele está andando sobre ele ou apenas está caindo ainda na zona delimitada pelo cubo
+    if(nearestCube == oldCubo)
     {
-        if(antigoY != camera_position_c.y && antigoY >= cubos[nearest].y + (cubos[nearest].dy)/2 + ALTURAHERO - 0.1f )
+        ///Se tem variacao no Y pode ter pousado pois estaav caindo
+        if(antigoY != camera_position_c.y && antigoY >= cubos[nearestCube].y + (cubos[nearestCube].dy)/2 + ALTURAHERO - 0.1f )
         {
-            processaPouso(antigoY,cubos[nearest].y,cubos[nearest].dy,ALTURAHERO);
+            processaPouso(antigoY,cubos[nearestCube].y,cubos[nearestCube].dy,ALTURAHERO);
         }
         else
-        {
-            if (entreLimites(camera_position_c.y,cubos[nearest].y,cubos[nearest].dy,ALTURAHERO -0.01f))
+        {   ///Pode apenas estar andando sobre a plataforma, ai só testa se ele nao bate em outra plataforma
+            if (entreLimites(camera_position_c.y,cubos[nearestCube].y,cubos[nearestCube].dy,ALTURAHERO -0.01f))
             {
                 *invadiuObjeto = true;
             }
         }
     }
     else
-    {
+    {   ///Se antes ele estava sobre o "nada" (estava pulando e aos seus pes nao havia nada)
         if(oldCubo == -1)
         {
-            if (processaPouso(antigoY,cubos[nearest].y,cubos[nearest].dy,ALTURAHERO -0.01f))
+            ///Testa se pousou sobre uma plataforma
+            if (processaPouso(antigoY,cubos[nearestCube].y,cubos[nearestCube].dy,ALTURAHERO -0.01f))
             {
 
             }
             else
-            {
-                if (entreLimites(camera_position_c.y,cubos[nearest].y,cubos[nearest].dy,ALTURAHERO -0.01f))
+            {   ///Testa se bateu de frente numa plataforma pois nao caiu acima dela
+                if (entreLimites(camera_position_c.y,cubos[nearestCube].y,cubos[nearestCube].dy,ALTURAHERO -0.01f))
                 {
 
                     *invadiuObjeto = true;
@@ -2424,7 +2444,8 @@ void trataColisaoCubo(float novoX,float antigoY,float novoZ, int nearest,bool *i
         }
         else
         {
-            if (entreLimites(camera_position_c.y,cubos[nearest].y,cubos[nearest].dy,ALTURAHERO -0.01f))
+            ///O novo movimento fez ele trocar o cubo mais proximo dele, testa se nao invadiu o cubo entrando nele
+            if (entreLimites(camera_position_c.y,cubos[nearestCube].y,cubos[nearestCube].dy,ALTURAHERO -0.01f))
             {
                 *invadiuObjeto = true;
             }
@@ -2435,7 +2456,7 @@ void trataColisaoCubo(float novoX,float antigoY,float novoZ, int nearest,bool *i
 }
 
 ///Retorna o indice da plataforma mais proxima da camera que esteja sendo invadido sua BBox no vetor de plataformas passado
-int cuboProximo(float novoX,float antigoY,float novoZ,std::vector<Cubo> cubos)
+int getNearestCube(float novoX,float antigoY,float novoZ,std::vector<Cubo> cubos)
 {
     int indice = -1;
     float longe = 100;
@@ -2463,14 +2484,21 @@ int cuboProximo(float novoX,float antigoY,float novoZ,std::vector<Cubo> cubos)
 /// Caso o personagem parar de estar "voando sobre o vazio" testa algumas possiveis colisoes
 void processaColisao(float novoX,float antigoY,float novoZ,bool *invadiuObjeto,std::vector<Cubo> cubos)
 {
-    int nearest = cuboProximo(novoX,antigoY,novoZ,cubos);
+    int nearestCube = getNearestCube(novoX,antigoY,novoZ,cubos);
     //std::cout<< oldCubo <<std::endl;
-    if (nearest!= -1)
+    if (nearestCube!= -1)
     {
-        trataColisaoCubo(novoX,antigoY,novoZ,nearest,invadiuObjeto,cubos);
+        trataColisaoCubo(novoX,antigoY,novoZ,nearestCube,invadiuObjeto,cubos);
+    }
+    if (*invadiuObjeto == true)
+    {
+        cubos.erase(cubos.begin() + nearestCube);
+        float nearestCubeBelow = getNearestCube(novoX,antigoY,novoZ,cubos);
+        trataColisaoCubo(novoX,antigoY,novoZ,nearestCubeBelow,invadiuObjeto,cubos);
+        nearestCube = nearestCubeBelow;
     }
 
-    oldCubo = nearest;
+    oldCubo = nearestCube;
 
 }
 
@@ -2487,7 +2515,7 @@ bool processaPouso(float antigoY,float cuboY,float cuboDY,float correcao)
 }
 
 /// Sepa processa os Movimentos, desconfio pelo nome da funcao
-void processaMovimentos(bool WASD, float antigoX, float *novoX, float antigoZ, float *novoZ, float antigoY, std::vector<Cubo> &cubos, glm::vec4 teleportPos)
+void processaMovimentos(bool WASD,float antigoX,float * novoX,float antigoZ,float * novoZ,float antigoY,std::vector<Cubo> &cubos, glm::vec4 teleportPos)
 {
     antigoY = camera_position_c.y;
 
@@ -2498,22 +2526,29 @@ void processaMovimentos(bool WASD, float antigoX, float *novoX, float antigoZ, f
     {
         bool invadiuObjeto = false;
         MAGICPLATFORM = false;
+
+        ///Se nao ta caindo nem pulando so caminhou. Testa se ele nao saiu da plataforma e deveria cair
         if(!CAINDO && !JUMPING)
         {
             testaChao(*novoX,*novoZ,&startFall,actualSecond,cubos);
         }
+        ///Se pulou e/ou caiu ja aplica gravidade
         else
         {
             aplicaGravidade();
         }
+
+        ///Processa colisao com objetos
         processaColisao(*novoX,antigoY,*novoZ,&invadiuObjeto,cubos);
 
+        ///So reseta a vida quando esta morto E aperta enter
         if(DIED && enterPressed)
         {
             enterPressed = false;
             resetLife(novoX,novoZ,cubos);
             CAINDO = false;
         }
+        ///So muda a posicao do X e do Z se o movimento for permitido, ou seja, nao foi proibido por invadir um objeto
         else if(!invadiuObjeto)
         {
             camera_position_c.x = *novoX;
@@ -2536,14 +2571,12 @@ ArrowType selectArrowType()
     else if(pressT){
         return teleport;
     }
-    else{
-        return normal;
-    }
 }
 
+///Trata o teleport com a flecha
 void handleTeleport(float * novoX,float * novoZ, std::vector<Cubo> cubos, glm::vec4 teleportPos)
 {
-    int teleportedPlatform = cuboProximo(teleportPos.x,teleportPos.y,teleportPos.z,cubos);
+    int teleportedPlatform = getNearestCube(teleportPos.x,teleportPos.y,teleportPos.z,cubos);
     //cout <<"cubo onde estou em cima : "<< teleportedPlatform << endl;
     if (teleportedPlatform != -1)
     {
@@ -2561,6 +2594,7 @@ void handleTeleport(float * novoX,float * novoZ, std::vector<Cubo> cubos, glm::v
 
 }
 
+///Limites do angulo quando se esta no menu da vaca para ela sempre ficar focada
 void angleLimits()
 {
 
@@ -2608,5 +2642,19 @@ void aplicaGravidade()
 
 }
 
+///Carrega posicoes dos cubos. Pode ser hardcoded ou vir a ser leitura de arquivo
+void loadCubesPositions(std::vector<Cubo> &cubos)
+{
+
+    cubos.push_back(Cubo(-1.5f, 0.6f, 0.0f, 4.0f, 4.0f, 4.0f,0,false));
+    cubos.push_back(Cubo(4.0f, 1.2f, 0.0f, 4.0f, 4.0f, 4.0f,1,false));
+    cubos.push_back(Cubo(7.5f, 0.12f, -7.5f, 4.0f, 4.0f, 4.0f,1,false));
+    cubos.push_back(Cubo(14.0f, 0.16f, -20.5f, 4.0f, 4.0f, 12.0f,0,false));
+    cubos.push_back(Cubo(3.5f, 0.9f, -16.5f, 1.9f, 2.0f, 5.0f,0,false));
+    cubos.push_back(Cubo(7.5f, 0.9f, -20.5f, 5.0f, 5.0f, 1.9f,2,false));
+    cubos.push_back(Cubo(17.5f, 3.0f, -20.5f, 4.0f, 4.0f, 12.0f,2,false));
+
+    cubos.push_back(Cubo(0,0,0,1,1,1,0,false)); // Cubo usado para criar plataforma
+}
 // set makeprg=cd\ ..\ &&\ make\ run\ >/dev/null
 // vim: set spell spelllang=pt_br :
