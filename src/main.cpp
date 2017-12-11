@@ -595,24 +595,18 @@ int menu()
         // e também resetamos todos os pixels do Z-buffer (depth buffer).
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        angleLimits();
-
         glUseProgram(program_id);
         float r = g_CameraDistance;
         float y = r*sin(g_CameraPhi);
         float z = r*cos(g_CameraPhi)*cos(g_CameraTheta);
         float x = r*cos(g_CameraPhi)*sin(g_CameraTheta);
 
-        ///Vetores w u para camera + movimentacao
-
-
-        glm::vec4 camera_view_vector = glm::vec4(x,y,z,0.0f);
-        // Vetor "view", sentido para onde a câmera está virada
-        camera_view_vector = camera_view_vector/norm(camera_view_vector);
-        w = -camera_view_vector;
-        u = crossproduct(camera_up_vector, w);
-        w = w/norm(w);
-        u = u/norm(u);
+        // Abaixo definimos as varáveis que efetivamente definem a câmera virtual.
+        // Veja slide 165 do documento "Aula_08_Sistemas_de_Coordenadas.pdf".
+        glm::vec4 camera_position_c  = glm::vec4(x,y,z,1.0f); // Ponto "c", centro da câmera
+        glm::vec4 camera_lookat_l    = glm::vec4(0.0f,0.0f,0.0f,1.0f); // Ponto "l", para onde a câmera (look-at) estará sempre olhando
+        glm::vec4 camera_view_vector = camera_lookat_l - camera_position_c; // Vetor "view", sentido para onde a câmera está virada
+        glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
 
         // Computamos a matriz "View" utilizando os parâmetros da câmera para
         // definir o sistema de coordenadas da câmera.  Veja slide 169 do
@@ -651,10 +645,7 @@ int menu()
         }
 
         glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
-        model = Matrix_Translate(camera_position_c[0],
-                                 camera_position_c[1],
-                                 camera_position_c[2] + 2)
-                                 * Matrix_Rotate_Y((float)glfwGetTime() * 0.1f);;
+        model = Matrix_Rotate_Y((float)glfwGetTime() * 0.1f);;
         // Enviamos as matrizes "view" e "projection" para a placa de vídeo
         // (GPU). Veja o arquivo "shader_vertex.glsl", onde estas são
         // efetivamente aplicadas em todos os pontos.
@@ -730,6 +721,8 @@ void playGame()
     glm::vec4 *plataformArrowPosition = nullptr;
 
     engine->play2D("../../audio/song1.wav", true);
+
+    glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
 
     // Ficamos em loop, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
@@ -817,9 +810,6 @@ void playGame()
         }
         else
         {
-
-            glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
-
             // Enviamos as matrizes "view" e "projection" para a placa de vídeo
             // (GPU). Veja o arquivo "shader_vertex.glsl", onde estas são
             // efetivamente aplicadas em todos os pontos.
@@ -834,20 +824,6 @@ void playGame()
             glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
             glUniform1i(object_id_uniform, SPHERE);
             DrawVirtualObject("sphere");
-
-            // Desenhamos o modelo do coelho
-            model = Matrix_Translate(1.0f,0.0f,0.0f)
-                    * Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f);
-            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-            glUniform1i(object_id_uniform, BUNNY);
-            DrawVirtualObject("bunny");
-
-            model = Matrix_Translate(1.0f,2.0f,0.0f)
-                    * Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f);
-            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-            glUniform1i(object_id_uniform, CUBE);
-            DrawVirtualObject("cube");
-
 
             model = Matrix_Translate(0.0f,-1.0f,0.0f)
                     * Matrix_Scale(100.0, 1.0, 100.0);
@@ -902,43 +878,24 @@ void playGame()
             for(unsigned i = 0; i < cubos.size(); i++)
             {
                 if(!cubos[i].hidden){
-                  //draw5Enemies(glm::vec3(cubos[i].x,cubos[i].y,cubos[i].z), cubos[i].dy, cubos[i].dx);
+
                   model = Matrix_Translate(cubos[i].x,cubos[i].y,cubos[i].z)
                           * Matrix_Scale(cubos[i].dx * 0.9,cubos[i].dy,cubos[i].dz * 0.9);
                   glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-
-                  ///Switch com o texture code de cada cubo. Talez podesse ser chamado so uma vez o glUniform so dai
-                  /// escolher qual textureImage mandar.
-                  switch (cubos[i].textureCode){
-                    case 0:
-                        glUniform1i(object_id_uniform, CUBE);
-                        break;
-                    case 1:
-                        glUniform1i(object_id_uniform, CUBE1);
-                        break;
-                    case 2:
-                        glUniform1i(object_id_uniform, CUBE2);
-
-                }
+                  glUniform1i(object_id_uniform, cubos[i].textureCode);
                   DrawVirtualObject("cube");
                 }
             }
 
             if(enemies.size() == 0){
                 createEnemies(10, &enemies);
-
             }
             for(unsigned i = 0; i < enemies.size(); i++){
 
-
                   updateEnemy(&enemies[i], camera_position_c, whileTime);
 
-                  float angle = atan2((enemies[i].pos.x - camera_position_c.x), (enemies[i].pos.z - camera_position_c.z));
-
-                  enemies[i].rotation_Y = angle;
-
                   model = Matrix_Translate(enemies[i].pos.x, enemies[i].pos.y, enemies[i].pos.z)
-                         * Matrix_Rotate_Y(enemies[i].rotation_Y + 3.14)
+                         * Matrix_Rotate_Y(enemies[i].rotation_Y)
                          * Matrix_Scale(enemies[i].scale.x, enemies[i].scale.y, enemies[i].scale.z);
                   glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
                   glUniform1i(object_id_uniform, GHOST);
@@ -1048,7 +1005,8 @@ void playGame()
                 //Colisao com inimigos
                 for(unsigned e = 0; e < enemies.size(); e++){
                     model = Matrix_Translate(enemies[e].pos.x, enemies[e].pos.y, enemies[e].pos.z)
-                             * Matrix_Scale(enemies[e].scale.x, enemies[e].scale.y, enemies[e].scale.z);
+                        // * Matrix_Rotate_Y(enemies[e].rotation_Y)  ver pq isso aqui faz não funcionar!
+                         * Matrix_Scale(enemies[e].scale.x, enemies[e].scale.y, enemies[e].scale.z);
 
                     glm::vec4 bbox_max = model * glm::vec4(g_VirtualScene[enemies[e].name].bbox_max.x, g_VirtualScene[enemies[e].name].bbox_max.y, g_VirtualScene[enemies[e].name].bbox_max.z, 1.0f);
                     glm::vec4 bbox_min = model * glm::vec4(g_VirtualScene[enemies[e].name].bbox_min.x, g_VirtualScene[enemies[e].name].bbox_min.y, g_VirtualScene[enemies[e].name].bbox_min.z, 1.0f);
@@ -1081,6 +1039,30 @@ void playGame()
 
             }
             arrowRateController--;
+        }
+
+        // Doesn't allow more than 10 arrows in the scene
+        if(arrows.size() > 10){
+            arrows.erase(arrows.begin(), arrows.begin() + 5);
+        }
+
+        glm::vec4 youBBoxMin = glm::vec4(-1.0f, -1.0f, -1.0f, 1.0f);
+        glm::vec4 youBBoxMax = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+        youBBoxMax = Matrix_Translate(camera_position_c.x, camera_position_c.y, camera_position_c.z) * youBBoxMax;
+        youBBoxMin = Matrix_Translate(camera_position_c.x, camera_position_c.y, camera_position_c.z) * youBBoxMin;
+
+        // Collision Enemies with Yourself
+        for(int e = 0; e < enemies.size(); e++){
+            model = Matrix_Translate(enemies[e].pos.x, enemies[e].pos.y, enemies[e].pos.z)
+                // * Matrix_Rotate_Y(enemies[e].rotation_Y)  ver pq isso aqui faz não funcionar!
+                 * Matrix_Scale(enemies[e].scale.x, enemies[e].scale.y, enemies[e].scale.z);
+
+            glm::vec4 bbox_max = model * glm::vec4(g_VirtualScene[enemies[e].name].bbox_max.x, g_VirtualScene[enemies[e].name].bbox_max.y, g_VirtualScene[enemies[e].name].bbox_max.z, 1.0f);
+            glm::vec4 bbox_min = model * glm::vec4(g_VirtualScene[enemies[e].name].bbox_min.x, g_VirtualScene[enemies[e].name].bbox_min.y, g_VirtualScene[enemies[e].name].bbox_min.z, 1.0f);
+
+            if(areBBOXintersecting(youBBoxMin, youBBoxMax, bbox_min, bbox_max)){
+                camera_position_c.y = -10.0f; //kills you
+            }
         }
 
         // O framebuffer onde OpenGL executa as operações de renderização não
@@ -2648,15 +2630,15 @@ void aplicaGravidade()
 void loadCubesPositions(std::vector<Cubo> &cubos)
 {
 
-    cubos.push_back(Cubo(-1.5f, 0.6f, 0.0f, 4.0f, 4.0f, 4.0f,0,false));
-    cubos.push_back(Cubo(4.0f, 1.2f, 0.0f, 4.0f, 4.0f, 4.0f,1,false));
-    cubos.push_back(Cubo(7.5f, 0.12f, -7.5f, 4.0f, 4.0f, 4.0f,1,false));
-    cubos.push_back(Cubo(14.0f, 0.16f, -20.5f, 4.0f, 4.0f, 12.0f,0,false));
-    cubos.push_back(Cubo(3.5f, 0.9f, -16.5f, 1.9f, 2.0f, 5.0f,0,false));
-    cubos.push_back(Cubo(7.5f, 0.9f, -20.5f, 5.0f, 5.0f, 1.9f,2,false));
-    cubos.push_back(Cubo(17.5f, 3.0f, -20.5f, 4.0f, 4.0f, 12.0f,2,false));
+    cubos.push_back(Cubo(-1.5f, 0.6f, 0.0f, 4.0f, 4.0f, 4.0f,CUBE,false));
+    cubos.push_back(Cubo(4.0f, 1.2f, 0.0f, 4.0f, 4.0f, 4.0f,CUBE1,false));
+    cubos.push_back(Cubo(7.5f, 0.12f, -7.5f, 4.0f, 4.0f, 4.0f,CUBE2,false));
+    cubos.push_back(Cubo(14.0f, 0.16f, -20.5f, 4.0f, 4.0f, 12.0f,CUBE,false));
+    cubos.push_back(Cubo(3.5f, 0.9f, -16.5f, 1.9f, 2.0f, 5.0f,CUBE,false));
+    cubos.push_back(Cubo(7.5f, 0.9f, -20.5f, 5.0f, 5.0f, 1.9f,CUBE2,false));
+    cubos.push_back(Cubo(17.5f, 3.0f, -20.5f, 4.0f, 4.0f, 12.0f,CUBE2,false));
 
-    cubos.push_back(Cubo(0,0,0,1,1,1,0,false)); // Cubo usado para criar plataforma
+    cubos.push_back(Cubo(0,0,0,1,1,1,CUBE,false)); // Cubo usado para criar plataforma
 }
 // set makeprg=cd\ ..\ &&\ make\ run\ >/dev/null
 // vim: set spell spelllang=pt_br :

@@ -13,7 +13,7 @@ struct Enemy{
     float rotation_Y;
     std::string name;
 
-    Enemy(glm::vec4 p, bool isFixed, char enemyName[]){
+    Enemy(glm::vec4 p, bool isFixed, std::string enemyName){
         fixed = isFixed;
         rotation_Y = 0;
         pos = p;
