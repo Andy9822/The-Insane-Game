@@ -62,7 +62,7 @@
 #define INITIAL_THETA -0.5f
 #define INITIAL_PHI -0.465
 #define ALTURAHERO 1.9f
-#define START_POSITION glm::vec4(14.0f ,2.16f + ALTURAHERO, -26.0f, 1.0f)
+#define START_POSITION glm::vec4(0.0f ,ALTURAHERO + 1.0f, 0.0f, 1.0f)
 #define MAX_THETA_MENU 0.7
 #define MIN_THETA_MENU -0.7
 #define MAX_PHI_MENU 0.5
@@ -197,7 +197,8 @@ void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 ///Element drawing
 void draw3Enemies(glm::vec3 cubeCenter, float cubeHeight, float cubeRadius);
 void draw5Enemies(glm::vec3 cubeCenter, float cubeHeight, float cubeRadius);
-void createEnemies(int numEnemies, std::vector<Enemy> enemies);
+void createEnemies(int numEnemies, std::vector<Enemy>* enemies, Cubo referenceCube);
+void createRandomNextCube(vector<Cubo> *cubos, Cubo present);
 
 ///Prototipos das funcoes feitas pelo Andy
 bool entreLimites(float posCamera, float eixo, float delta,float erro);
@@ -271,9 +272,7 @@ double g_LastCursorPosX, g_LastCursorPosY;
 // Número de texturas carregadas pela função LoadTextureImage()
 GLuint g_NumLoadedTextures = 0;
 
-//===============================================================================================================
-///Variaveis para animações
-int stretchCount = 0;
+
 
 //===============================================================================================================
 ///Variaveis para as teclas de movimentos
@@ -521,15 +520,76 @@ int main(int argc, char* argv[])
     glm::mat4 the_model;
     glm::mat4 the_view;
 
-    menu();
+    int opMenu = menu();
+    switch(opMenu){
 
-    playGame();
+    case 0 :
+
+      playGame();
+      break;
+
+    }
+
 
     // Finalizamos o uso dos recursos do sistema operacional
     glfwTerminate();
 
     // Fim do programa
     return 0;
+}
+
+void createEnemies(int numEnemies, std::vector<Enemy>* enemies, Cubo referenceCube){
+
+    srand(time(NULL));
+
+    float randomx;
+    float diffx;
+    float rx;
+    float randomz;
+    float diffz;
+    float rz;
+
+    for(int i = 0; i < numEnemies; i++){
+        randomx = ((float) rand()) / (float) RAND_MAX;
+        diffx = 100.0f;
+        rx = randomx * diffx;
+        if(i%2 == 0){
+          rx = -rx;
+        }
+        randomz = ((float) rand()) / (float) RAND_MAX;
+        diffz = 100.0f;
+        rz = randomz * diffz;
+        if(i%4 == 0){
+          rz = -rz;
+        }
+        enemies->push_back(Enemy(glm::vec4(referenceCube.x + rx, referenceCube.y + 30.0f, referenceCube.z + rz, 1.0f), false, "ghost"));
+    }
+}
+
+void createRandomNextCube(vector<Cubo> *cubos, Cubo present){
+
+  srand(time(NULL));
+
+  float randomx = ((float) rand()) / (float) RAND_MAX;
+
+  float diffx = 50.0f;
+  float rx = randomx * diffx;
+
+
+  float randomz = ((float) rand()) / (float) RAND_MAX;
+
+  float diffz = 20.0f;
+  float rz = randomz * diffz;
+
+
+  float randomy = ((float) rand()) / (float) RAND_MAX;
+
+  float diffy = 5.0f;
+  float ry = randomy * diffy;
+
+  int rColor = rand() % 10 + 1;
+
+  cubos->push_back(Cubo(present.x - 25.0f + rx, present.y + ry, present.z - 10.0f + rz,10.0f, 1.0f, 10.0f, rColor, false));
 }
 
 int menu()
@@ -675,41 +735,20 @@ int menu()
 
 }
 
-void createEnemies(int numEnemies, std::vector<Enemy>* enemies){
-
-    srand(time(NULL));
-
-    float randomx;
-    float diffx;
-    float rx;
-    float randomz;
-    float diffz;
-    float rz;
-
-    for(int i = 0; i < numEnemies; i++){
-        randomx = ((float) rand()) / (float) RAND_MAX;
-        diffx = 100.0f;
-        rx = randomx * diffx;
-        if(i%2 == 0){
-          rx = -rx;
-        }
-        randomz = ((float) rand()) / (float) RAND_MAX;
-        diffz = 100.0f;
-        rz = randomz * diffz;
-        if(i%4 == 0){
-          rz = -rz;
-        }
-        enemies->push_back(Enemy(glm::vec4(rx, 30.0f, rz, 1.0f), false, "ghost"));
-    }
-}
 
 void playGame()
 {
+
+    int stretchCount = 0;
     float enemiesSpawnController = glfwGetTime();
-    int arrowRateController = glfwGetTime();
+    double stretchController = glfwGetTime();
+    double arrowRateController = 0;
     enterPressed = false;
     std::vector<Cubo> cubos;
-    loadCubesPositions(cubos);
+    Cubo creatableCube(0,0,0,10.0f,1.0f,10.0f,0,false);
+    cubos.push_back(creatableCube);
+    //loadCubesPositions(cubos);
+    cubos.push_back(Cubo(0.0f,0.0f,0.0f,10.0f,1.0f,10.0f,5,false));
 
     std::vector<Arrow> arrows;
     std::vector<Enemy> enemies;
@@ -727,6 +766,11 @@ void playGame()
     // Ficamos em loop, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
     {
+        if(glfwGetTime() - stretchController > 0.02 && stretchCount+1 < 20 && charging){
+
+          stretchCount++;
+          stretchController = glfwGetTime();
+        }
 
         actualSecond = (glfwGetTime() * 10);
 
@@ -816,23 +860,10 @@ void playGame()
             glUniformMatrix4fv(view_uniform, 1, GL_FALSE, glm::value_ptr(view));
             glUniformMatrix4fv(projection_uniform, 1, GL_FALSE, glm::value_ptr(projection));
 
-            // Desenhamos o modelo da esfera
-            model = Matrix_Translate(-1.0f,0.0f,0.0f)
-                    * Matrix_Rotate_Z(0.6f)
-                    * Matrix_Rotate_X(0.2f)
-                    * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
-            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-            glUniform1i(object_id_uniform, SPHERE);
-            DrawVirtualObject("sphere");
 
-            model = Matrix_Translate(0.0f,-1.0f,0.0f)
-                    * Matrix_Scale(100.0, 1.0, 100.0);
-            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-            glUniform1i(object_id_uniform, PLANE);
-            DrawVirtualObject("plane");
 
             std::stringstream sst;
-            sst << (int) (stretchCount/5)+1;
+            sst << (int) (stretchCount)+1;
             std::string st = "bow_anim" + sst.str();
             char* bowStretch = new char[st.length()];
             strcpy(bowStretch, st.c_str());
@@ -842,7 +873,7 @@ void playGame()
             model = Matrix_Translate(camera_position_c[0] + bowPos[0],
                                      camera_position_c[1] + bowPos[1],
                                      camera_position_c[2] + bowPos[2])
-                    * Matrix_Rotate(3.14/3 - ((float)stretchCount/(5*19))*(3.14/3), camera_view_vector)
+                    * Matrix_Rotate(3.14/3 - ((float)stretchCount/(19))*(3.14/3), camera_view_vector)
                     * Matrix_Rotate(g_CameraPhi, u)
                     * Matrix_Rotate(3.14/2 + g_CameraTheta, camera_up_vector)
                     * Matrix_Scale(0.065, 0.035, 0.065);
@@ -850,14 +881,14 @@ void playGame()
             glUniform1i(object_id_uniform, BOW);
             DrawVirtualObject(bowStretch);
 
-            glm::vec4 handPos =   ((float)stretchCount/(5*19)) * 1.5f*camera_view_vector + (1 -((float)stretchCount/(5*19))) * 1.45f*camera_view_vector
-                                  + ((float)stretchCount/(5*19)) * 0.05f*u + (1 -((float)stretchCount/(5*19))) * -0.3f*u
-                                  + ((float)stretchCount/(5*19)) * -0.55f*v + (1 -((float)stretchCount/(5*19))) * -0.3f*v;
+            glm::vec4 handPos =   ((float)stretchCount/(19)) * 1.5f*camera_view_vector + (1 -((float)stretchCount/(19))) * 1.45f*camera_view_vector
+                                  + ((float)stretchCount/(19)) * 0.05f*u + (1 -((float)stretchCount/(19))) * -0.3f*u
+                                  + ((float)stretchCount/(19)) * -0.55f*v + (1 -((float)stretchCount/(19))) * -0.3f*v;
 
             model =  Matrix_Translate(camera_position_c[0] + handPos[0],
                                       camera_position_c[1] + handPos[1],
                                       camera_position_c[2] + handPos[2])
-                     * Matrix_Rotate(-3.14/6- ((float)stretchCount/(5*19))*(3.14/3), camera_view_vector)
+                     * Matrix_Rotate(-3.14/6- ((float)stretchCount/(19))*(3.14/3), camera_view_vector)
                      * Matrix_Rotate(g_CameraPhi, u)
                      * Matrix_Rotate(g_CameraTheta + 3.14, camera_up_vector)
                      * Matrix_Scale(0.009, 0.009, 0.009);
@@ -888,7 +919,8 @@ void playGame()
             }
 
             if(enemies.size() == 0){
-                createEnemies(10, &enemies);
+                createRandomNextCube(&cubos, cubos[cubos.size()-1]);
+                createEnemies(cubos.size(), &enemies, cubos[cubos.size()-1]);
             }
             for(unsigned i = 0; i < enemies.size(); i++){
 
@@ -896,7 +928,7 @@ void playGame()
 
                   model = Matrix_Translate(enemies[i].pos.x, enemies[i].pos.y, enemies[i].pos.z)
                          * Matrix_Rotate_Y(enemies[i].rotation_Y)
-                         * Matrix_Scale(enemies[i].scale.x, enemies[i].scale.y, enemies[i].scale.z);
+                         * Matrix_Scale(enemies[i].scale.x, enemies[i].scale.y + enemies[i].Y_deviation, enemies[i].scale.z);
                   glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
                   glUniform1i(object_id_uniform, GHOST);
                   DrawVirtualObject(enemies[i].name.c_str());
@@ -908,16 +940,12 @@ void playGame()
             // Create plataform
             if(g_RightMouseButtonPressed && plataformArrowPosition != nullptr)
             {
-                cubos[cubos.size()-1].x = plataformArrowPosition->x;
-                cubos[cubos.size()-1].y = plataformArrowPosition->y;
-                cubos[cubos.size()-1].z = plataformArrowPosition->z;
+                cubos[0].x = plataformArrowPosition->x;
+                cubos[0].y = plataformArrowPosition->y;
+                cubos[0].z = plataformArrowPosition->z;
                 MAGICPLATFORM = true;
             }
 
-            if(charging && (stretchCount/5)+1 < 20)
-            {
-                stretchCount++;
-            }
             if(g_LeftMouseButtonPressed && !charging && arrowReplaced)
             {
                 charging = true;
@@ -927,7 +955,7 @@ void playGame()
             if(!g_LeftMouseButtonPressed && charging && arrowReplaced)
             {
                 arrowReplaced = false;
-                arrowRateController = 50;
+                arrowRateController = glfwGetTime();
                 stretchCount = 0;
                 charging = false;
                 chargeTime = (glfwGetTime() * 10) - chargeTime;
@@ -945,14 +973,14 @@ void playGame()
 
                 engine->play2D("../../audio/arco.mp3", false);
             }
-
-            if(arrowRateController < 0)
+            if(glfwGetTime() - arrowRateController > 20)
             {
 
+
                 arrowReplaced = true;
-                glm::vec4 arrowPos =  ((float)stretchCount/(5*19)) * 1.0f*camera_view_vector + (1 -((float)stretchCount/(5*19))) * 2.0f*camera_view_vector
-                                      + ((float)stretchCount/(5*19)) * 0.15f*u + (1 -((float)stretchCount/(5*19))) * 0.06f*u
-                                      + ((float)stretchCount/(5*19)) * -0.25f*v + (1 -((float)stretchCount/(5*19))) * -0.15f*v;
+                glm::vec4 arrowPos =  ((float)stretchCount/(19)) * 1.0f*camera_view_vector + (1 -((float)stretchCount/(19))) * 2.0f*camera_view_vector
+                                      + ((float)stretchCount/(19)) * 0.15f*u + (1 -((float)stretchCount/(19))) * 0.06f*u
+                                      + ((float)stretchCount/(19)) * -0.25f*v + (1 -((float)stretchCount/(19))) * -0.15f*v;
 
                 model = Matrix_Translate(camera_position_c[0] + arrowPos[0],
                                          camera_position_c[1] + arrowPos[1],
@@ -1006,7 +1034,7 @@ void playGame()
                 for(unsigned e = 0; e < enemies.size(); e++){
                     model = Matrix_Translate(enemies[e].pos.x, enemies[e].pos.y, enemies[e].pos.z)
                         // * Matrix_Rotate_Y(enemies[e].rotation_Y)  ver pq isso aqui faz não funcionar!
-                         * Matrix_Scale(enemies[e].scale.x, enemies[e].scale.y, enemies[e].scale.z);
+                         * Matrix_Scale(enemies[e].scale.x, enemies[e].scale.y + enemies[e].Y_deviation, enemies[e].scale.z);
 
                     glm::vec4 bbox_max = model * glm::vec4(g_VirtualScene[enemies[e].name].bbox_max.x, g_VirtualScene[enemies[e].name].bbox_max.y, g_VirtualScene[enemies[e].name].bbox_max.z, 1.0f);
                     glm::vec4 bbox_min = model * glm::vec4(g_VirtualScene[enemies[e].name].bbox_min.x, g_VirtualScene[enemies[e].name].bbox_min.y, g_VirtualScene[enemies[e].name].bbox_min.z, 1.0f);
@@ -1055,7 +1083,7 @@ void playGame()
         for(int e = 0; e < enemies.size(); e++){
             model = Matrix_Translate(enemies[e].pos.x, enemies[e].pos.y, enemies[e].pos.z)
                 // * Matrix_Rotate_Y(enemies[e].rotation_Y)  ver pq isso aqui faz não funcionar!
-                 * Matrix_Scale(enemies[e].scale.x, enemies[e].scale.y, enemies[e].scale.z);
+                 * Matrix_Scale(enemies[e].scale.x, enemies[e].scale.y + enemies[e].Y_deviation, enemies[e].scale.z);
 
             glm::vec4 bbox_max = model * glm::vec4(g_VirtualScene[enemies[e].name].bbox_max.x, g_VirtualScene[enemies[e].name].bbox_max.y, g_VirtualScene[enemies[e].name].bbox_max.z, 1.0f);
             glm::vec4 bbox_min = model * glm::vec4(g_VirtualScene[enemies[e].name].bbox_min.x, g_VirtualScene[enemies[e].name].bbox_min.y, g_VirtualScene[enemies[e].name].bbox_min.z, 1.0f);
@@ -2296,9 +2324,9 @@ void resetLife(float *novoX,float *novoZ,std::vector<Cubo> &cubos)
     g_CameraTheta = INITIAL_THETA;
     g_CameraPhi = INITIAL_PHI;
 
-    cubos[cubos.size()-1].x = 0;
-    cubos[cubos.size()-1].y = 0;
-    cubos[cubos.size()-1].z = 0;
+    cubos[0].x = 0;
+    cubos[0].y = 0;
+    cubos[0].z = 0;
 }
 
 ///Testa se uma coordenada de 1 dos eixos (x y ou z ) da camera esta entre o maior e menor valor dessa
