@@ -2452,7 +2452,7 @@
 	<inttypes.h>
 	<stdint.h>
 
-1513033279 source:c:\users\henrique & guilherme\documents\the-insane-game\src\main.cpp
+1513116348 source:c:\users\henrique & guilherme\documents\the-insane-game\src\main.cpp
 	<cmath>
 	<cstdio>
 	<cstdlib>
@@ -3356,7 +3356,7 @@
 	<glm/vec4.hpp>
 	<cmath>
 
-1513028985 source:c:\users\henrique & guilherme\documents\the-insane-game\src\enemy.cpp
+1513094427 source:c:\users\henrique & guilherme\documents\the-insane-game\src\enemy.cpp
 	"enemy.h"
 	<glm/vec4.hpp>
 	<cmath>

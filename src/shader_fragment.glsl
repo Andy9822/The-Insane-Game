@@ -32,6 +32,7 @@ uniform mat4 projection;
 #define CUBE1 11
 #define CUBE2 12
 #define COW 13
+#define WALLPAPER 14
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -47,6 +48,8 @@ uniform sampler2D TextureImage4;
 uniform sampler2D TextureImage5;
 uniform sampler2D TextureImage6;
 uniform sampler2D TextureImage7;
+uniform sampler2D TextureImage8;
+uniform sampler2D TextureImage9;
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec3 color;
 
@@ -81,7 +84,8 @@ void main()
 
     // Normal do fragmento atual, interpolada pelo rasterizador a partir das
     // normais de cada vértice.
-    vec4 n = normalize(normal);
+    vec4 n;
+    n = normalize(normal);
 
     // Vetor que define o sentido da fonte de luz em relação ao ponto atual.
     vec4 l = normalize(vec4(1.0f,1.0f,0.0f,0.0f));
@@ -101,6 +105,7 @@ void main()
     float U = 0.0;
     float V = 0.0;
     switch(object_id){
+
 
         case ARROW:
             Kd = vec3(0.2f, 0.05f, 0.05f);
@@ -258,6 +263,17 @@ void main()
             q = 1;
             break;
 
+        case WALLPAPER:
+            // Coordenadas de textura do plano, obtidas do arquivo OBJ.
+            U = texcoords.x;
+            V = texcoords.y;
+            // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
+            Kd = texture(TextureImage9, vec2(U,V)).rgb;
+
+            Ks = vec3(0.0f,0.0f,0.0f);
+            Ka = vec3(0.0f,0.0f,0.0f);
+            q = 100;
+            break;
 
         default:
             Kd = vec3(0.08f, 0.7f, 1.0f);
@@ -273,17 +289,35 @@ void main()
     // Espectro da luz ambiente
     vec3 Ia = vec3(0.01f,0.01f,0.01f);
 
+    vec3 lambert_diffuse_term;
+
     if(object_id ==COW){
     vec3 Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
     vec3 Kd1 = texture(TextureImage1, vec2(U,V)).rgb;
     // Equação de Iluminação
     float lambert = max(0,dot(n,l));
+    if(object_id == WALLPAPER){
+      lambert_diffuse_term = Kd * I;
+    }
 
     color = Kd0 * (lambert + 0.01)+Kd1 * (1-pow(lambert,0.2));
     }else{
 
+      /*if(object_id == GHOST){
+
+        vec3 Kd2 = texture(TextureImage4, vec2(U,V)).rgb;
+        vec3 Kd3 = texture(TextureImage8, vec2(U,V)).rgb;
+
+        Kd3 = Kd3 - 128;
+        Kd3 = Kd3 / 128;
+
+
+        n = vec4(Kd3.x, Kd3.y, Kd3.z, 0.0f);
+
+      }*/
+
         // Termo difuso utilizando a lei dos cossenos de Lambert
-        vec3 lambert_diffuse_term = Kd * I * max(0, dot(n, l));
+        lambert_diffuse_term = Kd * I * max(0, dot(n, l));
 
         // Termo ambiente
         vec3 ambient_term = Ka * Ia;
@@ -300,4 +334,3 @@ void main()
     color = pow(color, vec3(1.0f,1.0f,1.0f)/2.2);
 }
 
-//Ks * I * pow(max(0, dot(r, v)), q);

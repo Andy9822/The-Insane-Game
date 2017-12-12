@@ -82,6 +82,7 @@
 #define CUBE1 11
 #define CUBE2 12
 #define COW 13
+#define WALLPAPER 14
 using namespace std;
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
@@ -422,8 +423,11 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/ghost/ghostText.png");      // TextureImage4
 
     LoadTextureImage("../../data/cube/hazard.jpg");      // TextureImage5
-    LoadTextureImage("../../data/cube/bloc.jpg");      // TextureImage5
-    LoadTextureImage("../../data/cube/box2.jpg");      // TextureImage5
+    LoadTextureImage("../../data/cube/bloc.jpg");      // TextureImage6
+    LoadTextureImage("../../data/cube/box2.jpg");      // TextureImage7
+    LoadTextureImage("../../data/ghost/normalMap.png");      // TextureImage8
+    LoadTextureImage("../../data/galaxy.jpg");      // TextureImage9
+
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     ObjModel spheremodel("../../data/sphere.obj");
@@ -454,9 +458,9 @@ int main(int argc, char* argv[])
     ComputeNormals(&pinkymodel);
     BuildTrianglesAndAddToVirtualScene(&pinkymodel);
 
-    ObjModel blinkymodel("../../data/blinky/Blinky.obj");
-    ComputeNormals(&blinkymodel);
-    BuildTrianglesAndAddToVirtualScene(&blinkymodel);
+    ObjModel righthandmodel("../../data/stretch.obj");
+    ComputeNormals(&righthandmodel);
+    BuildTrianglesAndAddToVirtualScene(&righthandmodel);
 
     ObjModel cubemodel("../../data/cube.obj");
     ComputeNormals(&cubemodel);
@@ -493,6 +497,7 @@ int main(int argc, char* argv[])
     ObjModel lefthandmodel("../../data/hand.obj");
     ComputeNormals(&lefthandmodel);
     BuildTrianglesAndAddToVirtualScene(&lefthandmodel);
+
 
     ObjModel arrowmodel("../../data/Arrow.obj");
     ComputeNormals(&arrowmodel);
@@ -713,8 +718,8 @@ int menu()
         glUniformMatrix4fv(view_uniform, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(projection_uniform, 1, GL_FALSE, glm::value_ptr(projection));
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1i(object_id_uniform, COW);
-        DrawVirtualObject("cow");
+        glUniform1i(object_id_uniform, GHOST);
+        DrawVirtualObject("ghost");
 
         TextRendering_PrintString(window, "Start", 0.0f, startPos, startSize);
         TextRendering_PrintString(window, "Options", 0.0f, optionPos, optionSize);
@@ -782,6 +787,10 @@ void playGame()
         // "Pintamos" todos os pixels do framebuffer com a cor definida acima,
         // e também resetamos todos os pixels do Z-buffer (depth buffer).
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+
+
 
         // Pedimos para a GPU utilizar o programa de GPU criado acima (contendo
         // os shaders de vértice e fragmentos).
@@ -855,6 +864,17 @@ void playGame()
         }
         else
         {
+
+            glDepthMask(false);
+            model = Matrix_Translate(0,0,10)*Matrix_Rotate(g_CameraPhi, u)
+                    * Matrix_Rotate(3.14/2 + g_CameraTheta, camera_up_vector)
+                    *Matrix_Rotate(3.14, camera_up_vector)
+                    *Matrix_Scale(100, 100, 1);
+            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(object_id_uniform, WALLPAPER);
+            DrawVirtualObject("cube");
+            glDepthMask(true);
+
             // Enviamos as matrizes "view" e "projection" para a placa de vídeo
             // (GPU). Veja o arquivo "shader_vertex.glsl", onde estas são
             // efetivamente aplicadas em todos os pontos.
@@ -896,6 +916,25 @@ void playGame()
             glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
             glUniform1i(object_id_uniform, ARM);
             DrawVirtualObject("hand");
+
+            glm::vec4 righthandPos =   ((float)stretchCount/(19)) * 0.15f*camera_view_vector + (1 -((float)stretchCount/(19))) * 1.0f*camera_view_vector
+                                  + ((float)stretchCount/(19)) * 0.1f*u + (1 -((float)stretchCount/(19))) * 0.1f*u
+                                  + ((float)stretchCount/(19)) * -0.25f*v + (1 -((float)stretchCount/(19))) * -0.25f*v;
+
+                                  /*((float)stretchCount/(19)) * 1.5f*camera_view_vector + (1 -((float)stretchCount/(19))) * 1.0f*camera_view_vector
+                                  + ((float)stretchCount/(19)) * 0.05f*u + (1 -((float)stretchCount/(19))) * 0.1f*u
+                                  + ((float)stretchCount/(19)) * -0.55f*v + (1 -((float)stretchCount/(19))) * -0.25f*v;*/
+
+            model =  Matrix_Translate(camera_position_c[0] + righthandPos[0],
+                                      camera_position_c[1] + righthandPos[1],
+                                      camera_position_c[2] + righthandPos[2])
+                     * Matrix_Rotate(3.14 - 3.14/5 - ((float)stretchCount/(19))*(5*3.14/16), camera_view_vector)
+                     * Matrix_Rotate(g_CameraPhi, u)
+                     * Matrix_Rotate(g_CameraTheta + 3.14, camera_up_vector)
+                     * Matrix_Scale(0.09, 0.09, 0.1);
+            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(object_id_uniform, ARM);
+            DrawVirtualObject("rightHand");
 
             model = Matrix_Translate(camera_position_c[0] + camera_view_vector[0],
                                      camera_position_c[1] + camera_view_vector[1],
@@ -1328,6 +1367,8 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(program_id, "TextureImage5"), 5);
     glUniform1i(glGetUniformLocation(program_id, "TextureImage6"), 6);
     glUniform1i(glGetUniformLocation(program_id, "TextureImage7"), 7);
+    glUniform1i(glGetUniformLocation(program_id, "TextureImage8"), 8);
+    glUniform1i(glGetUniformLocation(program_id, "TextureImage9"), 9);
     glUseProgram(0);
 }
 
