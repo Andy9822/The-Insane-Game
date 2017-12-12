@@ -81,6 +81,7 @@
 #define CUBE 10
 #define CUBE1 11
 #define CUBE2 12
+#define COW 13
 using namespace std;
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
@@ -705,14 +706,14 @@ int menu()
         }
 
         glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
-        model = Matrix_Rotate_Y((float)glfwGetTime() * 0.1f);;
+        model = Matrix_Rotate_Y((float)glfwGetTime() * 0.1f);
         // Enviamos as matrizes "view" e "projection" para a placa de vídeo
         // (GPU). Veja o arquivo "shader_vertex.glsl", onde estas são
         // efetivamente aplicadas em todos os pontos.
         glUniformMatrix4fv(view_uniform, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(projection_uniform, 1, GL_FALSE, glm::value_ptr(projection));
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1i(object_id_uniform, BUNNY);
+        glUniform1i(object_id_uniform, COW);
         DrawVirtualObject("cow");
 
         TextRendering_PrintString(window, "Start", 0.0f, startPos, startSize);
@@ -776,7 +777,7 @@ void playGame()
 
         // Aqui executamos as operações de renderização
 
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClearColor(0.1f, 0.0f, 0.1f, 0.0f);
 
         // "Pintamos" todos os pixels do framebuffer com a cor definida acima,
         // e também resetamos todos os pixels do Z-buffer (depth buffer).
@@ -824,7 +825,7 @@ void playGame()
         // estão no sentido negativo! Veja slides 198-200 do documento
         // "Aula_09_Projecoes.pdf".
         float nearplane = -0.1f;  // Posição do "near plane"
-        float farplane  = -100.0f; // Posição do "far plane"
+        float farplane  = -500.0f; // Posição do "far plane"
 
         if (g_UsePerspectiveProjection)
         {

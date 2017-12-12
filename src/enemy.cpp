@@ -21,9 +21,9 @@ void updateEnemy(Enemy *e, glm::vec4 camera_pos, float timeElapsed)
     }
 
     if(!e->Y_deviationLimit){
-        e->Y_deviation+=0.05f;
+        e->Y_deviation+=0.02f*timeElapsed;
     }else{
-        e->Y_deviation-=0.02f;
+        e->Y_deviation-=0.0075f*timeElapsed;
     }
     e->rotation_Y = angle + 3.14;
 
