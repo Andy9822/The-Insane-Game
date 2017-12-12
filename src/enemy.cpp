@@ -13,6 +13,7 @@ void updateEnemy(Enemy *e, glm::vec4 camera_pos, float timeElapsed)
     }
 
     float angle = atan2((e->pos.x - camera_pos.x), (e->pos.z - camera_pos.z));
+    e->rotation_Y = angle + 3.14;
 
     if(e->Y_deviation > 0.25f){
       e->Y_deviationLimit = true;
@@ -25,6 +26,6 @@ void updateEnemy(Enemy *e, glm::vec4 camera_pos, float timeElapsed)
     }else{
         e->Y_deviation-=0.0075f*timeElapsed;
     }
-    e->rotation_Y = angle + 3.14;
+
 
 }

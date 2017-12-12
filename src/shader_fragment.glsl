@@ -33,6 +33,8 @@ uniform mat4 projection;
 #define CUBE2 12
 #define COW 13
 #define WALLPAPER 14
+#define MOON 15
+
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -50,6 +52,8 @@ uniform sampler2D TextureImage6;
 uniform sampler2D TextureImage7;
 uniform sampler2D TextureImage8;
 uniform sampler2D TextureImage9;
+uniform sampler2D TextureImage10;
+
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec3 color;
 
@@ -104,185 +108,195 @@ void main()
     // Coordenadas de textura U e V
     float U = 0.0;
     float V = 0.0;
-    switch(object_id){
+    switch(object_id)
+    {
+    case ARROW:
+        Kd = vec3(0.2f, 0.05f, 0.05f);
+        Ks = vec3(0.0f, 0.0f, 0.0f);
+        Ka = Kd / 2;
+        q = 1.0;
+        break;
 
+    case ARROWT:
+        Kd = vec3(0.5f, 1.0f, 0.05f);
+        Ks = vec3(0.0f, 0.0f, 0.0f);
+        Ka = Kd / 2;
+        q = 1.0;
+        break;
 
-        case ARROW:
-            Kd = vec3(0.2f, 0.05f, 0.05f);
-            Ks = vec3(0.0f, 0.0f, 0.0f);
-            Ka = Kd / 2;
-            q = 1.0;
-            break;
+    case ARROWP:
+        Kd = vec3(0.5f, 0.5f, 1.0f);
+        Ks = vec3(0.0f, 0.0f, 0.0f);
+        Ka = Kd / 2;
+        q = 1.0;
+        break;
 
-        case ARROWT:
-            Kd = vec3(0.5f, 1.0f, 0.05f);
-            Ks = vec3(0.0f, 0.0f, 0.0f);
-            Ka = Kd / 2;
-            q = 1.0;
-            break;
+    case ARM:
+        U = (position_model.x - minx)/(maxx - minx) ;
+        V = (position_model.y - miny)/(maxy - miny) ;
+        Kd = texture(TextureImage2, vec2(U,V)).rgb;
+        Ks = vec3(0.0f, 0.0f, 0.0f);
+        Ka = Kd / 2;
+        q = 1.0;
+        break;
 
-        case ARROWP:
-            Kd = vec3(0.5f, 0.5f, 1.0f);
-            Ks = vec3(0.0f, 0.0f, 0.0f);
-            Ka = Kd / 2;
-            q = 1.0;
-            break;
+    case SPHERE:
+        // PREENCHA AQUI as coordenadas de textura da esfera, computadas com
+        // projeção esférica EM COORDENADAS DO MODELO. Utilize como referência
+        // o slide 139 do documento "Aula_20_e_21_Mapeamento_de_Texturas.pdf".
+        // A esfera que define a projeção deve estar centrada na posição
+        // "bbox_center" definida abaixo.
 
-        case ARM:
-            U = (position_model.x - minx)/(maxx - minx) ;
-            V = (position_model.y - miny)/(maxy - miny) ;
-            Kd = texture(TextureImage2, vec2(U,V)).rgb;
-            Ks = vec3(0.0f, 0.0f, 0.0f);
-            Ka = Kd / 2;
-            q = 1.0;
-            break;
+        // Você deve utilizar:
+        //   função 'length( )' : comprimento Euclidiano de um vetor
+        //   função 'atan( , )' : arcotangente. Veja https://en.wikipedia.org/wiki/Atan2.
+        //   função 'asin( )'   : seno inverso.
+        //   constante M_PI
+        //   variável position_model
 
-        case SPHERE:
-            // PREENCHA AQUI as coordenadas de textura da esfera, computadas com
-            // projeção esférica EM COORDENADAS DO MODELO. Utilize como referência
-            // o slide 139 do documento "Aula_20_e_21_Mapeamento_de_Texturas.pdf".
-            // A esfera que define a projeção deve estar centrada na posição
-            // "bbox_center" definida abaixo.
+        bbox_center = (bbox_min + bbox_max) / 2.0;
+        p = position_model - bbox_center;
+        float ro = length(p);
+        float teta = atan(p.x, p.z);
+        float fi = asin(p.y/ro);
 
-            // Você deve utilizar:
-            //   função 'length( )' : comprimento Euclidiano de um vetor
-            //   função 'atan( , )' : arcotangente. Veja https://en.wikipedia.org/wiki/Atan2.
-            //   função 'asin( )'   : seno inverso.
-            //   constante M_PI
-            //   variável position_model
+        U = (teta + M_PI)/(2*M_PI);
+        V = (fi + M_PI_2)/M_PI;
 
-            bbox_center = (bbox_min + bbox_max) / 2.0;
-            p = position_model - bbox_center;
-            float ro = length(p);
-            float teta = atan(p.x, p.z);
-            float fi = asin(p.y/ro);
+        // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
+        Kd = texture(TextureImage0, vec2(U,V)).rgb;
+        Ka = vec3(0.1f,0.1f,0.1f);
+        Ks = vec3(0.1f,0.1f,0.1f);
+        q = 1;
+        break;
 
-            U = (teta + M_PI)/(2*M_PI);
-            V = (fi + M_PI_2)/M_PI;
+    case BUNNY:
+        // PREENCHA AQUI as coordenadas de textura do coelho, computadas com
+        // projeção planar XY em COORDENADAS DO MODELO. Utilize como referência
+        // o slide 106 do documento "Aula_20_e_21_Mapeamento_de_Texturas.pdf",
+        // e também use as variáveis min*/max* definidas abaixo para normalizar
+        // as coordenadas de textura U e V dentro do intervalo [0,1]. Para
+        // tanto, veja por exemplo o mapeamento da variável 'h' no slide 149 do
+        // documento "Aula_20_e_21_Mapeamento_de_Texturas.pdf".
 
-            // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
-            Kd = texture(TextureImage0, vec2(U,V)).rgb;
-            Ka = vec3(0.1f,0.1f,0.1f);
-            Ks = vec3(0.1f,0.1f,0.1f);
-            q = 1;
-            break;
+        U = (position_model.x - minx)/(maxx - minx) ;
+        V = (position_model.y - miny)/(maxy - miny) ;
 
-        case BUNNY:
-            // PREENCHA AQUI as coordenadas de textura do coelho, computadas com
-            // projeção planar XY em COORDENADAS DO MODELO. Utilize como referência
-            // o slide 106 do documento "Aula_20_e_21_Mapeamento_de_Texturas.pdf",
-            // e também use as variáveis min*/max* definidas abaixo para normalizar
-            // as coordenadas de textura U e V dentro do intervalo [0,1]. Para
-            // tanto, veja por exemplo o mapeamento da variável 'h' no slide 149 do
-            // documento "Aula_20_e_21_Mapeamento_de_Texturas.pdf".
+        // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
+        Kd = texture(TextureImage0, vec2(U,V)).rgb;
+        Ka = vec3(0.1f,0.1f,0.1f);
+        Ks = vec3(0.1f,0.1f,0.1f);
+        q = 1;
+        break;
 
-            U = (position_model.x - minx)/(maxx - minx) ;
-            V = (position_model.y - miny)/(maxy - miny) ;
+    case COW:
 
-            // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
-            Kd = texture(TextureImage0, vec2(U,V)).rgb;
-            Ka = vec3(0.1f,0.1f,0.1f);
-            Ks = vec3(0.1f,0.1f,0.1f);
-            q = 1;
-            break;
+        U = (position_model.x - minx)/(maxx - minx) ;
+        V = (position_model.y - miny)/(maxy - miny) ;
 
-        case COW:
+        // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
+        Kd = texture(TextureImage0, vec2(U,V)).rgb;
+        Ka = vec3(0.1f,0.1f,0.1f);
+        Ks = vec3(0.1f,0.1f,0.1f);
+        q = 1;
+        break;
 
-            U = (position_model.x - minx)/(maxx - minx) ;
-            V = (position_model.y - miny)/(maxy - miny) ;
+    case PLANE:
+        // Coordenadas de textura do plano, obtidas do arquivo OBJ.
+        U = texcoords.x;
+        V = texcoords.y;
+        // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
+        Kd = texture(TextureImage0, vec2(U,V)).rgb;
+        Ka = vec3(0.1f,0.1f,0.1f);
+        Ks = vec3(0.1f,0.1f,0.1f);
+        q = 1;
+        break;
 
-            // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
-            Kd = texture(TextureImage0, vec2(U,V)).rgb;
-            Ka = vec3(0.1f,0.1f,0.1f);
-            Ks = vec3(0.1f,0.1f,0.1f);
-            q = 1;
-            break;
+    case AIM:
+        Kd = vec3(0.08f, 0.7f, 1.0f);
+        Ks = vec3(0.0f,0.0f,0.0f);
+        Ka = Kd/2;
+        q = 10.0;
+        l = normalize(camera_position - p);
+        break;
+    case BOW:
+        U = texcoords.x;
+        V = texcoords.y;
+        Kd = texture(TextureImage3, vec2(U,V)).rgb;
+        Ks = vec3(0.0f,0.0f,0.0f);
+        Ka = Kd/2;
+        q = 10.0;
+        break;
 
-        case PLANE:
-            // Coordenadas de textura do plano, obtidas do arquivo OBJ.
-            U = texcoords.x;
-            V = texcoords.y;
-            // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
-            Kd = texture(TextureImage0, vec2(U,V)).rgb;
-            Ka = vec3(0.1f,0.1f,0.1f);
-            Ks = vec3(0.1f,0.1f,0.1f);
-            q = 1;
-            break;
+    case GHOST:
 
-        case AIM:
-            Kd = vec3(0.08f, 0.7f, 1.0f);
-            Ks = vec3(0.0f,0.0f,0.0f);
-            Ka = Kd/2;
-            q = 10.0;
-            l = normalize(camera_position - p);
-            break;
-        case BOW:
-            U = texcoords.x;
-            V = texcoords.y;
-            Kd = texture(TextureImage3, vec2(U,V)).rgb;
-            Ks = vec3(0.0f,0.0f,0.0f);
-            Ka = Kd/2;
-            q = 10.0;
-            break;
+        U = texcoords.x;
+        V = texcoords.y;
+        Kd = texture(TextureImage4, vec2(U,V)).rgb;
+        Ks = vec3(0.0f, 0.0f, 0.0f);
+        Ka = Kd / 2;
+        q = 1;
+        break;
 
-        case GHOST:
+    ///Foram feitos 3 cases de cubo. Talvez podesse fazer um so e ver como troca entre textureImage usada.
+    case CUBE:
+        U = (position_model.x - minx)/(maxx - minx) ;
+        V = (position_model.y - miny)/(maxy - miny) ;
+        Kd = texture(TextureImage5, vec2(U,V)).rgb;
+        Ks = vec3(0.0f,0.0f,0.0f);
+        Ka = Kd/2;
+        q = 1;
+        break;
+    case CUBE1:
 
-            U = texcoords.x;
-            V = texcoords.y;
-            Kd = texture(TextureImage4, vec2(U,V)).rgb;
-            Ks = vec3(0.0f, 0.0f, 0.0f);
-            Ka = Kd / 2;
-            q = 1;
-            break;
+        U = (position_model.x - minx)/(maxx - minx) ;
+        V = (position_model.y - miny)/(maxy - miny) ;
+        Kd = texture(TextureImage6, vec2(U,V)).rgb;
+        Ks = vec3(0.0f,0.0f,0.0f);
+        Ka = Kd/2;
+        q = 1;
+        break;
 
-        ///Foram feitos 3 cases de cubo. Talvez podesse fazer um so e ver como troca entre textureImage usada.
-        case CUBE:
-            U = (position_model.x - minx)/(maxx - minx) ;
-            V = (position_model.y - miny)/(maxy - miny) ;
-            Kd = texture(TextureImage5, vec2(U,V)).rgb;
-            Ks = vec3(0.0f,0.0f,0.0f);
-            Ka = Kd/2;
-            q = 1;
-            break;
-        case CUBE1:
+    case CUBE2:
+        U = (position_model.x - minx)/(maxx - minx) ;
+        V = (position_model.y - miny)/(maxy - miny) ;
+        Kd = texture(TextureImage7, vec2(U,V)).rgb;
+        Ks = vec3(0.0f,0.0f,0.0f);
+        Ka = Kd/2;
+        q = 1;
+        break;
 
-            U = (position_model.x - minx)/(maxx - minx) ;
-            V = (position_model.y - miny)/(maxy - miny) ;
-            Kd = texture(TextureImage6, vec2(U,V)).rgb;
-            Ks = vec3(0.0f,0.0f,0.0f);
-            Ka = Kd/2;
-            q = 1;
-            break;
+    case WALLPAPER:
+        // Coordenadas de textura do plano, obtidas do arquivo OBJ.
+        U = texcoords.x;
+        V = texcoords.y;
+        // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
+        Kd = texture(TextureImage9, vec2(U,V)).rgb;
 
-        case CUBE2:
-            U = (position_model.x - minx)/(maxx - minx) ;
-            V = (position_model.y - miny)/(maxy - miny) ;
-            Kd = texture(TextureImage7, vec2(U,V)).rgb;
-            Ks = vec3(0.0f,0.0f,0.0f);
-            Ka = Kd/2;
-            q = 1;
-            break;
+        Ks = vec3(0.0f,0.0f,0.0f);
+        Ka = vec3(0.0f,0.0f,0.0f);
+        q = 100;
 
-        case WALLPAPER:
-            // Coordenadas de textura do plano, obtidas do arquivo OBJ.
-            U = texcoords.x;
-            V = texcoords.y;
-            // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
-            Kd = texture(TextureImage9, vec2(U,V)).rgb;
+        break;
+    case MOON:
+        U = texcoords.x;
+        V = texcoords.y;
+        // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
+        Kd = texture(TextureImage10, vec2(U,V)).rgb;
 
-            Ks = vec3(0.0f,0.0f,0.0f);
-            Ka = vec3(0.0f,0.0f,0.0f);
-            q = 100;
-            break;
+        Ks = vec3(0.0f,0.0f,0.0f);
+        Ka = vec3(0.0f,0.0f,0.0f);
+        q = 100;
+        break;
 
-        default:
-            Kd = vec3(0.08f, 0.7f, 1.0f);
-            Ks = vec3(0.0f,0.0f,0.0f);
-            Ka = Kd/2;
-            q = 10.0;
+    default:
+        Kd = vec3(0.08f, 0.7f, 1.0f);
+        Ks = vec3(0.0f,0.0f,0.0f);
+        Ka = Kd/2;
+        q = 10.0;
     }
 
-   // Espectro da fonte de iluminação
+    // Espectro da fonte de iluminação
 
     vec3 I = vec3(1.0f,1.0f,1.0f);
 
@@ -291,33 +305,38 @@ void main()
 
     vec3 lambert_diffuse_term;
 
-    if(object_id ==COW){
-    vec3 Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
-    vec3 Kd1 = texture(TextureImage1, vec2(U,V)).rgb;
-    // Equação de Iluminação
-    float lambert = max(0,dot(n,l));
-    if(object_id == WALLPAPER){
-      lambert_diffuse_term = Kd * I;
+    if(object_id == COW || object_id == SPHERE)
+    {
+        vec3 Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
+        vec3 Kd1 = texture(TextureImage1, vec2(U,V)).rgb;
+        // Equação de Iluminação
+        float lambert = max(0,dot(n,l));
+
+        color = Kd0 * (lambert + 0.01) + Kd1 * (1 - pow(lambert,0.2));
     }
+    else
+    {
 
-    color = Kd0 * (lambert + 0.01)+Kd1 * (1-pow(lambert,0.2));
-    }else{
+        /*if(object_id == GHOST){
 
-      /*if(object_id == GHOST){
+          vec3 Kd2 = texture(TextureImage4, vec2(U,V)).rgb;
+          vec3 Kd3 = texture(TextureImage8, vec2(U,V)).rgb;
 
-        vec3 Kd2 = texture(TextureImage4, vec2(U,V)).rgb;
-        vec3 Kd3 = texture(TextureImage8, vec2(U,V)).rgb;
-
-        Kd3 = Kd3 - 128;
-        Kd3 = Kd3 / 128;
+          Kd3 = Kd3 - 128;
+          Kd3 = Kd3 / 128;
 
 
-        n = vec4(Kd3.x, Kd3.y, Kd3.z, 0.0f);
+          n = vec4(Kd3.x, Kd3.y, Kd3.z, 0.0f);
 
-      }*/
+        }*/
 
         // Termo difuso utilizando a lei dos cossenos de Lambert
-        lambert_diffuse_term = Kd * I * max(0, dot(n, l));
+        if(object_id == WALLPAPER || object_id == MOON){
+            lambert_diffuse_term = Kd*I;
+        }
+        else{
+            lambert_diffuse_term = Kd * I * max(0, dot(n, l));
+        }
 
         // Termo ambiente
         vec3 ambient_term = Ka * Ia;

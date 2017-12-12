@@ -83,6 +83,8 @@
 #define CUBE2 12
 #define COW 13
 #define WALLPAPER 14
+#define MOON 15
+
 using namespace std;
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
@@ -427,6 +429,7 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/cube/box2.jpg");      // TextureImage7
     LoadTextureImage("../../data/ghost/normalMap.png");      // TextureImage8
     LoadTextureImage("../../data/galaxy.jpg");      // TextureImage9
+    LoadTextureImage("../../data/moon.jpg");      // TextureImage10
 
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
@@ -465,7 +468,6 @@ int main(int argc, char* argv[])
     ObjModel cubemodel("../../data/cube.obj");
     ComputeNormals(&cubemodel);
     BuildTrianglesAndAddToVirtualScene(&cubemodel);
-
 
     ObjModel ghostmodel("../../data/ghost/ghostOBJ.obj");
     ComputeNormals(&ghostmodel);
@@ -529,10 +531,9 @@ int main(int argc, char* argv[])
     int opMenu = menu();
     switch(opMenu){
 
-    case 0 :
-
-      playGame();
-      break;
+        case 0 :
+            playGame();
+            break;
 
     }
 
@@ -782,15 +783,9 @@ void playGame()
 
         // Aqui executamos as operações de renderização
 
-        glClearColor(0.1f, 0.0f, 0.1f, 0.0f);
-
         // "Pintamos" todos os pixels do framebuffer com a cor definida acima,
         // e também resetamos todos os pixels do Z-buffer (depth buffer).
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-
-
 
         // Pedimos para a GPU utilizar o programa de GPU criado acima (contendo
         // os shaders de vértice e fragmentos).
@@ -813,6 +808,18 @@ void playGame()
         antigoX = camera_position_c.x;
         antigoZ = camera_position_c.z;
         WASD = pressA || pressD || pressS || pressW;
+
+        //Desenha wallpaper
+        glDepthMask(false);
+        glm::vec4 wallpaperPos = camera_position_c + camera_view_vector;
+        model = Matrix_Translate(wallpaperPos.x, wallpaperPos.y, wallpaperPos.z)
+                *Matrix_Rotate(g_CameraPhi + 3.14/2, u)
+                *Matrix_Rotate(g_CameraTheta, camera_up_vector)
+                *Matrix_Scale(2,1,1);
+        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        glUniform1i(object_id_uniform, WALLPAPER);
+        DrawVirtualObject("cube");
+        glDepthMask(true);
 
         ///Processamento das acoes
         processaWASD(&novoX,antigoX,&novoZ,antigoZ,deslocamento,u,w);
@@ -865,32 +872,18 @@ void playGame()
         else
         {
 
-            glDepthMask(false);
-            model = Matrix_Translate(0,0,10)*Matrix_Rotate(g_CameraPhi, u)
-                    * Matrix_Rotate(3.14/2 + g_CameraTheta, camera_up_vector)
-                    *Matrix_Rotate(3.14, camera_up_vector)
-                    *Matrix_Scale(100, 100, 1);
-            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-            glUniform1i(object_id_uniform, WALLPAPER);
-            DrawVirtualObject("cube");
-            glDepthMask(true);
-
             // Enviamos as matrizes "view" e "projection" para a placa de vídeo
             // (GPU). Veja o arquivo "shader_vertex.glsl", onde estas são
             // efetivamente aplicadas em todos os pontos.
             glUniformMatrix4fv(view_uniform, 1, GL_FALSE, glm::value_ptr(view));
             glUniformMatrix4fv(projection_uniform, 1, GL_FALSE, glm::value_ptr(projection));
 
-
-
             std::stringstream sst;
             sst << (int) (stretchCount)+1;
             std::string st = "bow_anim" + sst.str();
             char* bowStretch = new char[st.length()];
             strcpy(bowStretch, st.c_str());
-
             glm::vec4 bowPos = 1.5f*camera_view_vector + 0.15f*u + -0.2f*v;
-
             model = Matrix_Translate(camera_position_c[0] + bowPos[0],
                                      camera_position_c[1] + bowPos[1],
                                      camera_position_c[2] + bowPos[2])
@@ -902,10 +895,25 @@ void playGame()
             glUniform1i(object_id_uniform, BOW);
             DrawVirtualObject(bowStretch);
 
+            model = Matrix_Translate(0,-10,0) * Matrix_Scale(1000,0,1000);
+            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(object_id_uniform, MOON);
+            DrawVirtualObject("plane");
+
+            // Desenhamos o modelo da esfera
+            model = Matrix_Translate(-300.0f,100.0f,100.0f)
+                  * Matrix_Scale(10,10,10)
+                  * Matrix_Rotate_Z(0.6f)
+                  * Matrix_Rotate_X(0.2f)
+                  * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
+
+            glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+            glUniform1i(object_id_uniform, SPHERE);
+            DrawVirtualObject("sphere");
+
             glm::vec4 handPos =   ((float)stretchCount/(19)) * 1.5f*camera_view_vector + (1 -((float)stretchCount/(19))) * 1.45f*camera_view_vector
                                   + ((float)stretchCount/(19)) * 0.05f*u + (1 -((float)stretchCount/(19))) * -0.3f*u
                                   + ((float)stretchCount/(19)) * -0.55f*v + (1 -((float)stretchCount/(19))) * -0.3f*v;
-
             model =  Matrix_Translate(camera_position_c[0] + handPos[0],
                                       camera_position_c[1] + handPos[1],
                                       camera_position_c[2] + handPos[2])
@@ -1255,8 +1263,8 @@ void LoadTextureImage(const char* filename)
     glGenSamplers(1, &sampler_id);
 
     // Veja slide 160 do documento "Aula_20_e_21_Mapeamento_de_Texturas.pdf"
-    glSamplerParameteri(sampler_id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glSamplerParameteri(sampler_id, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glSamplerParameteri(sampler_id, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glSamplerParameteri(sampler_id, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     // Parâmetros de amostragem da textura. Falaremos sobre eles em uma próxima aula.
     glSamplerParameteri(sampler_id, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -1369,6 +1377,7 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(program_id, "TextureImage7"), 7);
     glUniform1i(glGetUniformLocation(program_id, "TextureImage8"), 8);
     glUniform1i(glGetUniformLocation(program_id, "TextureImage9"), 9);
+    glUniform1i(glGetUniformLocation(program_id, "TextureImage10"), 10);
     glUseProgram(0);
 }
 

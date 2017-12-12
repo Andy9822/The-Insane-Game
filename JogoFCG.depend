@@ -1100,7 +1100,7 @@
 	<inttypes.h>
 	<stdint.h>
 
-1512958053 source:c:\users\lucas\desktop\the-insane-game\src\main.cpp
+1513125269 source:c:\users\lucas\desktop\the-insane-game\src\main.cpp
 	<cmath>
 	<cstdio>
 	<cstdlib>
@@ -3345,13 +3345,13 @@
 1512739426 source:c:\users\andy\desktop\fcg\animacoes mov bugado\src\tiny_obj_loader.cpp
 	"tiny_obj_loader.h"
 
-1512958345 c:\users\lucas\desktop\the-insane-game\include\enemy.h
+1513117282 c:\users\lucas\desktop\the-insane-game\include\enemy.h
 	<glm/vec4.hpp>
 	<glm/gtc/type_ptr.hpp>
 	<string>
 	<iostream>
 
-1512953975 source:c:\users\lucas\desktop\the-insane-game\src\enemy.cpp
+1513119577 source:c:\users\lucas\desktop\the-insane-game\src\enemy.cpp
 	"enemy.h"
 	<glm/vec4.hpp>
 	<cmath>
