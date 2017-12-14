@@ -428,7 +428,7 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/cube/bloc.jpg");      // TextureImage6
     LoadTextureImage("../../data/cube/box2.jpg");      // TextureImage7
     LoadTextureImage("../../data/ghost/normalMap.png");      // TextureImage8
-    LoadTextureImage("../../data/galaxy.jpg");      // TextureImage9
+    LoadTextureImage("../../data/space.jpg");      // TextureImage9
     LoadTextureImage("../../data/moon.jpg");      // TextureImage10
 
 
@@ -444,6 +444,10 @@ int main(int argc, char* argv[])
     ObjModel planemodel("../../data/plane.obj");
     ComputeNormals(&planemodel);
     BuildTrianglesAndAddToVirtualScene(&planemodel);
+
+    ObjModel planemodel2("../../data/plane2.obj");
+    ComputeNormals(&planemodel2);
+    BuildTrianglesAndAddToVirtualScene(&planemodel2);
 
     ObjModel cowmodel("../../data/cow.obj");
     ComputeNormals(&cowmodel);
@@ -712,15 +716,15 @@ int menu()
         }
 
         glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
-        model = Matrix_Rotate_Y((float)glfwGetTime() * 0.1f);
+       // model = Matrix_Rotate_Y((float)glfwGetTime() * 0.1f);
         // Enviamos as matrizes "view" e "projection" para a placa de vídeo
         // (GPU). Veja o arquivo "shader_vertex.glsl", onde estas são
         // efetivamente aplicadas em todos os pontos.
         glUniformMatrix4fv(view_uniform, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(projection_uniform, 1, GL_FALSE, glm::value_ptr(projection));
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1i(object_id_uniform, GHOST);
-        DrawVirtualObject("ghost");
+        glUniform1i(object_id_uniform, COW);
+        DrawVirtualObject("cow");
 
         TextRendering_PrintString(window, "Start", 0.0f, startPos, startSize);
         TextRendering_PrintString(window, "Options", 0.0f, optionPos, optionSize);
@@ -811,15 +815,58 @@ void playGame()
 
         //Desenha wallpaper
         glDepthMask(false);
-        glm::vec4 wallpaperPos = camera_position_c + camera_view_vector;
-        model = Matrix_Translate(wallpaperPos.x, wallpaperPos.y, wallpaperPos.z)
-                *Matrix_Rotate(g_CameraPhi + 3.14/2, u)
-                *Matrix_Rotate(g_CameraTheta, camera_up_vector)
-                *Matrix_Scale(2,1,1);
+        glm::vec4 wallpaperPos = camera_position_c;
+        model = Matrix_Translate(wallpaperPos.x, wallpaperPos.y + 250, wallpaperPos.z)
+                *Matrix_Rotate_Z(3.141592)
+                *Matrix_Scale(500,1,500);
         glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         glUniform1i(object_id_uniform, WALLPAPER);
         DrawVirtualObject("cube");
+        model = Matrix_Translate(wallpaperPos.x + 250, wallpaperPos.y, wallpaperPos.z)
+                *Matrix_Rotate_Z(3.141592)
+                *Matrix_Scale(1,500,500);
+        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        glUniform1i(object_id_uniform, WALLPAPER);
+        DrawVirtualObject("cube");
+        model = Matrix_Translate(wallpaperPos.x - 250, wallpaperPos.y, wallpaperPos.z)
+                *Matrix_Rotate_Z(3.141592)
+                *Matrix_Scale(1,500,500);
+        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        glUniform1i(object_id_uniform, WALLPAPER);
+        DrawVirtualObject("cube");
+        model = Matrix_Translate(wallpaperPos.x, wallpaperPos.y, wallpaperPos.z + 250)
+                *Matrix_Rotate_Z(3.141592)
+                *Matrix_Scale(500,500,1);
+        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        glUniform1i(object_id_uniform, WALLPAPER);
+        DrawVirtualObject("cube");
+        model = Matrix_Translate(wallpaperPos.x, wallpaperPos.y, wallpaperPos.z - 250)
+                *Matrix_Rotate_Z(3.141592)
+                *Matrix_Scale(500,500,1);
+        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        glUniform1i(object_id_uniform, WALLPAPER);
+        DrawVirtualObject("cube");
+
+
+            // Desenhamos o modelo da esfera
+            model = Matrix_Translate(wallpaperPos.x - 300.0f, wallpaperPos.y + 10.0f,wallpaperPos.z + 100.0f)
+                  * Matrix_Scale(100,100,100)
+                  * Matrix_Rotate_Z(0.6f)
+                  * Matrix_Rotate_X(0.2f)
+                  * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.01f);
+
+            glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+            glUniform1i(object_id_uniform, SPHERE);
+            DrawVirtualObject("sphere");
+
         glDepthMask(true);
+
+            model = Matrix_Translate(0,-10,0) * Matrix_Scale(1000,0,1000);
+            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(object_id_uniform, MOON);
+            DrawVirtualObject("plane");
+
+
 
         ///Processamento das acoes
         processaWASD(&novoX,antigoX,&novoZ,antigoZ,deslocamento,u,w);
@@ -895,21 +942,6 @@ void playGame()
             glUniform1i(object_id_uniform, BOW);
             DrawVirtualObject(bowStretch);
 
-            model = Matrix_Translate(0,-10,0) * Matrix_Scale(1000,0,1000);
-            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-            glUniform1i(object_id_uniform, MOON);
-            DrawVirtualObject("plane");
-
-            // Desenhamos o modelo da esfera
-            model = Matrix_Translate(-300.0f,100.0f,100.0f)
-                  * Matrix_Scale(10,10,10)
-                  * Matrix_Rotate_Z(0.6f)
-                  * Matrix_Rotate_X(0.2f)
-                  * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
-
-            glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-            glUniform1i(object_id_uniform, SPHERE);
-            DrawVirtualObject("sphere");
 
             glm::vec4 handPos =   ((float)stretchCount/(19)) * 1.5f*camera_view_vector + (1 -((float)stretchCount/(19))) * 1.45f*camera_view_vector
                                   + ((float)stretchCount/(19)) * 0.05f*u + (1 -((float)stretchCount/(19))) * -0.3f*u

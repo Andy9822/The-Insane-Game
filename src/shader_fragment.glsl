@@ -90,7 +90,6 @@ void main()
     // normais de cada vértice.
     vec4 n;
     n = normalize(normal);
-
     // Vetor que define o sentido da fonte de luz em relação ao ponto atual.
     vec4 l = normalize(vec4(1.0f,1.0f,0.0f,0.0f));
 
@@ -317,18 +316,38 @@ void main()
     else
     {
 
-        /*if(object_id == GHOST){
+        if(object_id == GHOST){
 
           vec3 Kd2 = texture(TextureImage4, vec2(U,V)).rgb;
           vec3 Kd3 = texture(TextureImage8, vec2(U,V)).rgb;
 
-          Kd3 = Kd3 - 128;
-          Kd3 = Kd3 / 128;
+          Kd3 = 2*Kd3 - 1;
 
 
-          n = vec4(Kd3.x, Kd3.y, Kd3.z, 0.0f);
+          vec3 newN = vec3(Kd3.x, Kd3.y, Kd3.z);
 
-        }*/
+
+          vec3 t;
+          vec3 b;
+          vec3 c1 = cross(vec3(newN.x, newN.y, newN.z), vec3(0.0, 0.0, 1.0));
+          vec3 c2 = cross(vec3(newN.x, newN.y, newN.z), vec3(0.0, 1.0, 0.0));
+          if (length(c1) > length(c2))
+            t = c1;
+          else
+            t = c2;
+          t = normalize(t);
+          b = normalize(cross(vec3(n.x, n.y, n.z), t));
+
+
+
+
+          mat3 worldTransition2 = mat3(t.x, t.y, t.z, b.x, b.y, b.z,n.x, n.y, n.z);
+
+          newN = worldTransition2 * newN;
+
+          n = vec4(newN.x, newN.y, newN.z, 0.0f);//transpose(inverse(view))*worldTransition * n;
+
+        }
 
         // Termo difuso utilizando a lei dos cossenos de Lambert
         if(object_id == WALLPAPER || object_id == MOON){
@@ -352,4 +371,5 @@ void main()
     // Veja https://en.wikipedia.org/w/index.php?title=Gamma_correction&oldid=751281772#Windows.2C_Mac.2C_sRGB_and_TV.2Fvideo_standard_gammas
     color = pow(color, vec3(1.0f,1.0f,1.0f)/2.2);
 }
+
 
