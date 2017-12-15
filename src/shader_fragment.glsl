@@ -125,10 +125,14 @@ void main()
         break;
 
     case ARROWT:
-        Kd = vec3(0.5f, 1.0f, 0.05f);
-        Ks = vec3(0.0f, 0.0f, 0.0f);
-        Ka = Kd / 2;
-        q = 1.0;
+        U = (position_model.x - minx)/(maxx - minx) ;
+        V = (position_model.y - miny)/(maxy - miny) ;
+
+        // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
+        Kd = texture(TextureImage0, vec2(U,V)).rgb;
+        Ka = vec3(0.1f,0.1f,0.1f);
+        Ks = vec3(0.1f,0.1f,0.1f);
+        q = 1;
         break;
 
     case ARROWP:
@@ -296,7 +300,7 @@ void main()
 
     case CUBE2:
         U = (position_model.x - minx)/(maxx - minx) ;
-        V = (position_model.y - miny)/(maxy - miny) ;
+        V = (position_model.z - minz)/(maxz - minz) ;
         Kd = texture(TextureImage7, vec2(U,V)).rgb;
         Ks = vec3(0.0f,0.0f,0.0f);
         Ka = Kd/2;
@@ -360,9 +364,7 @@ void main()
 
           Kd3 = 2*Kd3 - 1;
 
-
           vec3 newN = vec3(Kd3.x, Kd3.y, Kd3.z);
-
 
           vec3 t;
           vec3 b;
@@ -374,8 +376,6 @@ void main()
             t = c2;
           t = normalize(t);
           b = normalize(cross(vec3(n.x, n.y, n.z), t));
-
-
 
 
           mat3 worldTransition2 = mat3(t.x, t.y, t.z, b.x, b.y, b.z,n.x, n.y, n.z);

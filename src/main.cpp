@@ -61,7 +61,7 @@
 #define DIED camera_position_c.y < -0.5f
 #define INITIAL_THETA -0.5f
 #define INITIAL_PHI -0.465
-#define ALTURAHERO 1.9f
+#define ALTURAHERO 3.0f
 #define START_POSITION glm::vec4(0.0f ,ALTURAHERO + 1.0f, 0.0f, 1.0f)
 #define MAX_THETA_MENU 0.7
 #define MIN_THETA_MENU -0.7
@@ -139,9 +139,8 @@ struct Cubo
     float dy;
     float dz;
     int textureCode;
-    bool hidden;
 
-    Cubo(float x1, float y1, float z1, float dx1, float dy1, float dz1, int code, bool hideCube)
+    Cubo(float x1, float y1, float z1, float dx1, float dy1, float dz1, int code)
     {
         x = x1;
         y = y1;
@@ -150,7 +149,6 @@ struct Cubo
         dy = dy1;
         dz = dz1;
         textureCode = code;
-        hidden = hideCube;
     }
 };
 
@@ -172,7 +170,6 @@ GLuint CreateGpuProgram(GLuint vertex_shader_id, GLuint fragment_shader_id); // 
 void PrintObjModelInfo(ObjModel*); // Função para debugging
 void playGame();
 int menu();
-void angleLimits();
 
 // Declaração de funções auxiliares para renderizar texto dentro da janela
 // OpenGL. Estas funções estão definidas no arquivo "textrendering.cpp".
@@ -202,13 +199,15 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
 ///Element drawing
+void drawBackground(glm::vec4 &wallpaperPos);
 void draw3Enemies(glm::vec3 cubeCenter, float cubeHeight, float cubeRadius);
 void draw5Enemies(glm::vec3 cubeCenter, float cubeHeight, float cubeRadius);
 void createEnemies(int numEnemies, std::vector<Enemy>* enemies, Cubo referenceCube);
 void createRandomNextCube(vector<Cubo> *cubos, Cubo present);
 void generateFinalPlataform(vector<Cubo> *cubos, Cubo last);
 
-///Prototipos das funcoes feitas pelo Andy
+
+
 bool entreLimites(float posCamera, float eixo, float delta,float erro);
 bool caiuDemais(float antigoEixo,float novoEixo, float posEixo, float delta, float erro);
 void processaWASD(float *novoX,float antigoX,float *novoZ,float antigoZ,float deslocamento,glm::vec4 u,glm::vec4 w);
@@ -345,6 +344,8 @@ using namespace irrklang;
 ISoundEngine* engine;
 GLFWwindow* window;
 
+glm::mat4 model;
+
 int main(int argc, char* argv[])
 {
     // Inicializamos a biblioteca GLFW, utilizada para criar uma janela do
@@ -372,7 +373,7 @@ int main(int argc, char* argv[])
     glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
     glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
     glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
-    window = glfwCreateWindow(mode->width, mode->height, "My Title", NULL, NULL);
+    window = glfwCreateWindow(mode->width, mode->height, "The Insane Game", NULL, NULL);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     if (!window)
     {
@@ -537,19 +538,21 @@ int main(int argc, char* argv[])
     glm::mat4 the_model;
     glm::mat4 the_view;
 
-    while(true){
-      int opMenu = menu();
-      switch(opMenu){
+    while(true)
+    {
+        int opMenu = menu();
+        switch(opMenu)
+        {
 
-          case 0 :
-              playGame();
-              break;
-          case 2:
+        case 0 :
+            playGame();
+            break;
+        case 2:
             return 0;
-              break;
+            break;
 
 
-      }
+        }
     }
 
     // Finalizamos o uso dos recursos do sistema operacional
@@ -559,19 +562,23 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-void printDialog(vector<std::string> dialog, double time, double startTime){
+void printDialog(vector<std::string> dialog, double time, double startTime)
+{
 
-  if(glfwGetTime() - startTime < time && glfwGetTime() - startTime > 0){
-   int counter = 0;
-   for(int i = 0; i<dialog.size(); i++){
-     TextRendering_PrintString(window, dialog[i], 0.0f, 0.5f - counter*0.075f, 3.0f);
-     counter++;
-   }
-  }
+    if(glfwGetTime() - startTime < time && glfwGetTime() - startTime > 0)
+    {
+        int counter = 0;
+        for(unsigned i = 0; i < dialog.size(); i++)
+        {
+            TextRendering_PrintString(window, dialog[i], 0.0f, 0.5f - counter*0.075f, 3.0f);
+            counter++;
+        }
+    }
 
 }
 
-void createEnemies(int numEnemies, std::vector<Enemy>* enemies, Cubo referenceCube){
+void createEnemies(int numEnemies, std::vector<Enemy>* enemies, Cubo referenceCube)
+{
 
     srand(time(NULL));
 
@@ -582,52 +589,57 @@ void createEnemies(int numEnemies, std::vector<Enemy>* enemies, Cubo referenceCu
     float diffz;
     float rz;
 
-    for(int i = 0; i < numEnemies; i++){
+    for(int i = 0; i < numEnemies; i++)
+    {
         randomx = ((float) rand()) / (float) RAND_MAX;
         diffx = 100.0f;
         rx = randomx * diffx;
-        if(i%2 == 0){
-          rx = -rx;
+        if(i%2 == 0)
+        {
+            rx = -rx;
         }
         randomz = ((float) rand()) / (float) RAND_MAX;
         diffz = 100.0f;
         rz = randomz * diffz;
-        if(i%4 == 0){
-          rz = -rz;
+        if(i%4 == 0)
+        {
+            rz = -rz;
         }
         enemies->push_back(Enemy(glm::vec4(referenceCube.x + rx, referenceCube.y + 30.0f, referenceCube.z + rz, 1.0f), false, "ghost"));
     }
 }
 
-void createRandomNextCube(vector<Cubo> *cubos, Cubo present, int color){
+void createRandomNextCube(vector<Cubo> *cubos, Cubo present, int color)
+{
 
-  srand(time(NULL));
+    srand(time(NULL));
 
-  float randomx = ((float) rand()) / (float) RAND_MAX;
+    float randomx = ((float) rand()) / (float) RAND_MAX;
 
-  float diffx = 50.0f;
-  float rx = randomx * diffx;
-
-
-  float randomz = ((float) rand()) / (float) RAND_MAX;
-
-  float diffz = 20.0f;
-  float rz = randomz * diffz;
+    float diffx = 50.0f;
+    float rx = randomx * diffx;
 
 
-  float randomy = ((float) rand()) / (float) RAND_MAX;
+    float randomz = ((float) rand()) / (float) RAND_MAX;
 
-  float diffy = 5.0f;
-  float ry = randomy * diffy;
+    float diffz = 20.0f;
+    float rz = randomz * diffz;
 
 
-  cubos->push_back(Cubo(present.x - 25.0f + rx, present.y + ry, present.z - 10.0f + present.dz + rz,10.0f, 1.0f, 10.0f, color, false));
+    float randomy = ((float) rand()) / (float) RAND_MAX;
+
+    float diffy = 5.0f;
+    float ry = randomy * diffy;
+
+
+    cubos->push_back(Cubo(present.x - 25.0f + rx, present.y + ry, present.z - 10.0f + present.dz + rz,10.0f, 1.0f, 10.0f, color));
 }
 
 
-void generateFinalPlataform(vector<Cubo> *cubos, Cubo last){
+void generateFinalPlataform(vector<Cubo> *cubos, Cubo last)
+{
 
-  cubos->push_back(Cubo(last.x, last.y , last.z + last.dz/2 + 100.0f ,100.0f, 1.0f, 100.0f, 1, false));
+    cubos->push_back(Cubo(last.x, last.y, last.z + last.dz/2 + 100.0f,100.0f, 1.0f, 100.0f, 1));
 
 }
 
@@ -744,7 +756,7 @@ int menu()
         }
 
         glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
-       // model = Matrix_Rotate_Y((float)glfwGetTime() * 0.1f);
+        // model = Matrix_Rotate_Y((float)glfwGetTime() * 0.1f);
         // Enviamos as matrizes "view" e "projection" para a placa de vídeo
         // (GPU). Veja o arquivo "shader_vertex.glsl", onde estas são
         // efetivamente aplicadas em todos os pontos.
@@ -775,7 +787,6 @@ int menu()
 }
 
 
-
 void playGame()
 {
 
@@ -787,15 +798,14 @@ void playGame()
     int waveCounterLimit = 2;
     bool reachedAnEnd = false;
     int stretchCount = 0;
-    float enemiesSpawnController = glfwGetTime();
     double stretchController = glfwGetTime();
     double arrowRateController = 0;
     enterPressed = false;
     std::vector<Cubo> cubos;
-    Cubo creatableCube(0,0,0,10.0f,1.0f,10.0f,0,false);
+    Cubo creatableCube(0,0,0,10.0f,1.0f,10.0f,0);
     cubos.push_back(creatableCube);
     //loadCubesPositions(cubos);
-    cubos.push_back(Cubo(0.0f,0.0f,0.0f,10.0f,1.0f,10.0f,5,false));
+    cubos.push_back(Cubo(0.0f,0.0f,0.0f,10.0f,1.0f,10.0f,5));
 
     std::vector<Arrow> arrows;
     std::vector<Enemy> enemies;
@@ -811,7 +821,7 @@ void playGame()
 
     engine->play2D("../../audio/song1.wav", true);
 
-    glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
+    model = Matrix_Identity(); // Transformação identidade de modelagem
 
     std::vector<std::string> beginDialog;
     beginDialog.push_back("Come find me...");
@@ -841,15 +851,15 @@ void playGame()
 
 
 
-
     // Ficamos em loop, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
     {
 
-        if(glfwGetTime() - stretchController > 0.02 && stretchCount+1 < 20 && charging){
+        if(glfwGetTime() - stretchController > 0.02 && stretchCount+1 < 20 && charging)
+        {
 
-          stretchCount++;
-          stretchController = glfwGetTime();
+            stretchCount++;
+            stretchController = glfwGetTime();
         }
 
         actualSecond = (glfwGetTime() * 10);
@@ -885,68 +895,34 @@ void playGame()
         //Desenha wallpaper
         glDepthMask(false);
         glm::vec4 wallpaperPos = camera_position_c;
-        model = Matrix_Translate(wallpaperPos.x, wallpaperPos.y + 250, wallpaperPos.z)
-                *Matrix_Rotate_Z(3.141592)
-                *Matrix_Scale(500,1,500);
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1i(object_id_uniform, WALLPAPER);
-        DrawVirtualObject("cube");
-        model = Matrix_Translate(wallpaperPos.x + 250, wallpaperPos.y, wallpaperPos.z)
-                *Matrix_Rotate_Z(3.141592)
-                *Matrix_Scale(1,500,500);
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1i(object_id_uniform, WALLPAPER);
-        DrawVirtualObject("cube");
-        model = Matrix_Translate(wallpaperPos.x - 250, wallpaperPos.y, wallpaperPos.z)
-                *Matrix_Rotate_Z(3.141592)
-                *Matrix_Scale(1,500,500);
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1i(object_id_uniform, WALLPAPER);
-        DrawVirtualObject("cube");
-        model = Matrix_Translate(wallpaperPos.x, wallpaperPos.y, wallpaperPos.z + 250)
-                *Matrix_Rotate_Z(3.141592)
-                *Matrix_Scale(500,500,1);
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1i(object_id_uniform, WALLPAPER);
-        DrawVirtualObject("cube");
-        model = Matrix_Translate(wallpaperPos.x, wallpaperPos.y, wallpaperPos.z - 250)
-                *Matrix_Rotate_Z(3.141592)
-                *Matrix_Scale(500,500,1);
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1i(object_id_uniform, WALLPAPER);
-        DrawVirtualObject("cube");
+        drawBackground(wallpaperPos);
 
 
-            // Desenhamos o modelo da esfera
-            model = Matrix_Translate(wallpaperPos.x - 300.0f, wallpaperPos.y + 10.0f,wallpaperPos.z + 100.0f)
-                  * Matrix_Scale(100,100,100)
-                  * Matrix_Rotate_Z(0.6f)
-                  * Matrix_Rotate_X(0.2f)
-                  * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.01f);
+        // Desenhamos o modelo da esfera
+        model = Matrix_Translate(wallpaperPos.x - 300.0f, wallpaperPos.y + 10.0f,wallpaperPos.z + 100.0f)
+                * Matrix_Scale(100,100,100)
+                * Matrix_Rotate_Z(0.6f)
+                * Matrix_Rotate_X(0.2f)
+                * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.01f);
 
-            glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-            glUniform1i(object_id_uniform, SPHERE);
-            DrawVirtualObject("sphere");
+        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        glUniform1i(object_id_uniform, SPHERE);
+        DrawVirtualObject("sphere");
 
         glDepthMask(true);
 
-
-            model = Matrix_Translate(0,-10,0) * Matrix_Scale(1000,0,1000);
-            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-            glUniform1i(object_id_uniform, MOON);
-            DrawVirtualObject("plane");
-
-
+        model = Matrix_Translate(0,-10,0) * Matrix_Scale(1000,0,1000);
+        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        glUniform1i(object_id_uniform, MOON);
+        DrawVirtualObject("plane");
 
         ///Processamento das acoes
-        processaWASD(&novoX,antigoX,&novoZ,antigoZ,deslocamento,u,w);
+        processaWASD(&novoX, antigoX, &novoZ, antigoZ, deslocamento, u, w);
         if(pressSpace)
         {
             atualizaPulo();
         }
-
-
-        processaMovimentos(WASD,antigoX,&novoX,antigoZ,&novoZ,antigoY, cubos, teleportPosition);
+        processaMovimentos(WASD, antigoX, &novoX, antigoZ, &novoZ, antigoY, cubos, teleportPosition);
 
         // Computamos a matriz "View" utilizando os parâmetros da câmera para
         // definir o sistema de coordenadas da câmera.  Veja slide 169 do
@@ -987,8 +963,9 @@ void playGame()
         {
             waveCounter = -1;
             enemies.clear();
-            for(int i = 2; i<cubos.size(); i++){
-              cubos.pop_back();
+            for(unsigned i = 2; i < cubos.size(); i++)
+            {
+                cubos.pop_back();
             }
             reachedAnEnd = false;
             TextRendering_PrintString(window, "YOU DIED", -0.5f, 0.0f, 5.0f);
@@ -1036,8 +1013,8 @@ void playGame()
             DrawVirtualObject("hand");
 
             glm::vec4 righthandPos =   ((float)stretchCount/(19)) * 0.15f*camera_view_vector + (1 -((float)stretchCount/(19))) * 1.0f*camera_view_vector
-                                  + ((float)stretchCount/(19)) * 0.1f*u + (1 -((float)stretchCount/(19))) * 0.1f*u
-                                  + ((float)stretchCount/(19)) * -0.25f*v + (1 -((float)stretchCount/(19))) * -0.25f*v;
+                                       + ((float)stretchCount/(19)) * 0.1f*u + (1 -((float)stretchCount/(19))) * 0.1f*u
+                                       + ((float)stretchCount/(19)) * -0.25f*v + (1 -((float)stretchCount/(19))) * -0.25f*v;
 
 
             model =  Matrix_Translate(camera_position_c[0] + righthandPos[0],
@@ -1063,60 +1040,68 @@ void playGame()
 
             for(unsigned i = 0; i < cubos.size(); i++)
             {
-                if(!cubos[i].hidden){
-
-                  model = Matrix_Translate(cubos[i].x,cubos[i].y,cubos[i].z)
-                          * Matrix_Scale(cubos[i].dx * 0.9,cubos[i].dy,cubos[i].dz * 0.9);
-                  glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-                  glUniform1i(object_id_uniform, cubos[i].textureCode);
-                  DrawVirtualObject("cube");
-                }
+                model = Matrix_Translate(cubos[i].x,cubos[i].y,cubos[i].z)
+                        * Matrix_Scale(cubos[i].dx * 0.9,cubos[i].dy,cubos[i].dz * 0.9);
+                glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+                glUniform1i(object_id_uniform, cubos[i].textureCode);
+                DrawVirtualObject("cube");
             }
 
-            if(!reachedAnEnd){
-              if(waveCounter == waveCounterLimit ){
-                  reachedAnEnd = true;
-                  waveCounter = waveCounterLimit;
-                  generateFinalPlataform(&cubos, cubos[cubos.size()-1]);
-              }
-              else{
-                if(enemies.size() == 0){
-                    if(waveCounter>=0){
-                      createRandomNextCube(&cubos, cubos[cubos.size()-1], cubeText + 9);
-                    }
+            if(!reachedAnEnd)
+            {
+                if(waveCounter == waveCounterLimit )
+                {
+                    reachedAnEnd = true;
+                    waveCounter = waveCounterLimit;
+                    generateFinalPlataform(&cubos, cubos[cubos.size()-1]);
+                }
+                else
+                {
+                    if(enemies.size() == 0)
+                    {
+                        if(waveCounter>=0)
+                        {
+                            createRandomNextCube(&cubos, cubos[cubos.size()-1], cubeText + 9);
+                        }
 
-                    createEnemies(cubos.size(), &enemies, cubos[cubos.size()-1]);
-                    waveCounter++;
-                    enemyText++;
-                    cubeText++;
-                    if(enemyText > 3){
-                      enemyText = 0;
-                    }
-                    if(cubeText > 2){
-                      cubeText = 0;
+                        createEnemies(cubos.size(), &enemies, cubos[cubos.size()-1]);
+                        waveCounter++;
+                        enemyText++;
+                        cubeText++;
+                        if(enemyText > 3)
+                        {
+                            enemyText = 0;
+                        }
+                        if(cubeText > 2)
+                        {
+                            cubeText = 0;
+                        }
                     }
                 }
-              }
-            }else{
-              enemies.clear();
-              model = Matrix_Translate(cubos[cubos.size()-1].x, cubos[cubos.size()-1].y + cubos[cubos.size()-1].dy + 5, cubos[cubos.size()-1].z)
-              *Matrix_Rotate_Y(3.14/2)
-              *Matrix_Scale(10, 10, 10);
-
-              glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-              glUniform1i(object_id_uniform, COW);
-              DrawVirtualObject("cow");
             }
-            for(unsigned i = 0; i < enemies.size(); i++){
+            else
+            {
+                enemies.clear();
+                model = Matrix_Translate(cubos[cubos.size()-1].x, cubos[cubos.size()-1].y + cubos[cubos.size()-1].dy + 5, cubos[cubos.size()-1].z)
+                        *Matrix_Rotate_Y(3.14/2)
+                        *Matrix_Scale(10, 10, 10);
 
-                  updateEnemy(&enemies[i], camera_position_c, whileTime);
+                glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+                glUniform1i(object_id_uniform, COW);
+                DrawVirtualObject("cow");
+            }
+            //Draw and update enemies
+            for(unsigned i = 0; i < enemies.size(); i++)
+            {
 
-                  model = Matrix_Translate(enemies[i].pos.x, enemies[i].pos.y, enemies[i].pos.z)
-                         * Matrix_Rotate_Y(enemies[i].rotation_Y)
-                         * Matrix_Scale(enemies[i].scale.x, enemies[i].scale.y + enemies[i].Y_deviation, enemies[i].scale.z);
-                  glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-                  glUniform1i(object_id_uniform, enemyText + 15);
-                  DrawVirtualObject(enemies[i].name.c_str());
+                updateEnemy(&enemies[i], camera_position_c, whileTime);
+
+                model = Matrix_Translate(enemies[i].pos.x, enemies[i].pos.y, enemies[i].pos.z)
+                        * Matrix_Rotate_Y(enemies[i].rotation_Y)
+                        * Matrix_Scale(enemies[i].scale.x, enemies[i].scale.y + enemies[i].Y_deviation, enemies[i].scale.z);
+                glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+                glUniform1i(object_id_uniform, enemyText + 15);
+                DrawVirtualObject(enemies[i].name.c_str());
             }
 
             if(pressE || pressR || pressT)
@@ -1151,7 +1136,8 @@ void playGame()
                 {
                     arrows[arrows.size()-1].type = teleport;
                 }
-                else if(arrowType == plataform){
+                else if(arrowType == plataform)
+                {
                     arrows[arrows.size()-1].type = plataform;
                     plataformArrowPosition = &(arrows[arrows.size()-1].pos);
                 }
@@ -1160,8 +1146,6 @@ void playGame()
             }
             if(glfwGetTime() - arrowRateController > 20)
             {
-
-
                 arrowReplaced = true;
                 glm::vec4 arrowPos =  ((float)stretchCount/(19)) * 1.0f*camera_view_vector + (1 -((float)stretchCount/(19))) * 2.0f*camera_view_vector
                                       + ((float)stretchCount/(19)) * 0.15f*u + (1 -((float)stretchCount/(19))) * 0.06f*u
@@ -1202,10 +1186,12 @@ void playGame()
                     if(isPointInsideBBOX(arrows[i].pos, bbox_min, bbox_max))
                     {
                         engine->play2D("../../audio/plim.wav", false);
-                        if(arrows[i].type == plataform){
+                        if(arrows[i].type == plataform)
+                        {
                             plataformArrowPosition = nullptr;
                         }
-                        else if(arrows[i].type == teleport){
+                        else if(arrows[i].type == teleport && cubos[j].textureCode == CUBE2)
+                        {
                             teleportPosition = arrows[i].pos;
                             TELEPORTED = true;
                             engine->play2D("../../audio/teleport.wav", false);
@@ -1216,15 +1202,17 @@ void playGame()
                 }
 
                 //Colisao com inimigos
-                for(unsigned e = 0; e < enemies.size(); e++){
+                for(unsigned e = 0; e < enemies.size(); e++)
+                {
                     model = Matrix_Translate(enemies[e].pos.x, enemies[e].pos.y, enemies[e].pos.z)
-                        // * Matrix_Rotate_Y(enemies[e].rotation_Y)  ver pq isso aqui faz não funcionar!
-                         * Matrix_Scale(enemies[e].scale.x, enemies[e].scale.y + enemies[e].Y_deviation, enemies[e].scale.z);
+                            // * Matrix_Rotate_Y(enemies[e].rotation_Y)  ver pq isso aqui faz não funcionar!
+                            * Matrix_Scale(enemies[e].scale.x, enemies[e].scale.y + enemies[e].Y_deviation, enemies[e].scale.z);
 
                     glm::vec4 bbox_max = model * glm::vec4(g_VirtualScene[enemies[e].name].bbox_max.x, g_VirtualScene[enemies[e].name].bbox_max.y, g_VirtualScene[enemies[e].name].bbox_max.z, 1.0f);
                     glm::vec4 bbox_min = model * glm::vec4(g_VirtualScene[enemies[e].name].bbox_min.x, g_VirtualScene[enemies[e].name].bbox_min.y, g_VirtualScene[enemies[e].name].bbox_min.z, 1.0f);
 
-                    if(isPointInsideBBOX(arrows[i].pos, bbox_min, bbox_max)){
+                    if(isPointInsideBBOX(arrows[i].pos, bbox_min, bbox_max))
+                    {
                         enemies.erase(enemies.begin() + e);
 
                         arrowCollides = true;
@@ -1232,7 +1220,8 @@ void playGame()
 
                 }
                 // Draw the arrow
-                if(!arrowCollides){
+                if(!arrowCollides)
+                {
                     glm::vec4 uNew = crossproduct(camera_up_vector, - arrows[i].speed/norm(arrows[i].speed));
                     model = Matrix_Translate(arrows[i].pos.x, arrows[i].pos.y, arrows[i].pos.z)
                             * Matrix_Rotate(arrows[i].phiAngle, uNew)
@@ -1246,7 +1235,8 @@ void playGame()
                         glUniform1i(object_id_uniform, ARROW);
                     DrawVirtualObject("arrow");
                 }
-                else{
+                else
+                {
                     arrows.erase(arrows.begin() + i);
                 }
 
@@ -1254,33 +1244,39 @@ void playGame()
             arrowRateController--;
 
 
-        std::stringstream waveSST;
-        waveSST << (int) (waveCounter);
-        std::stringstream waveMaxSST;
-        waveMaxSST << (int) (waveCounterLimit);
-        std::string waveString = "wave: " + waveSST.str() + "/" + waveMaxSST.str();
-        TextRendering_PrintString(window, waveString, -0.9f, 0.8f, 5.0f);
+            std::stringstream waveSST;
+            waveSST << (int) (waveCounter);
+            std::stringstream waveMaxSST;
+            waveMaxSST << (int) (waveCounterLimit);
+            std::string waveString = "wave: " + waveSST.str() + "/" + waveMaxSST.str();
+            TextRendering_PrintString(window, waveString, -0.9f, 0.8f, 5.0f);
 
 
-        ///DIALOGOS COMEÇAM AQUI
+            ///DIALOGOS COMEÇAM AQUI
 
-        if(reachedAnEnd){
-          if(glfwGetTime() - endBegin2 > 20){
-            return;
-          }
-          printDialog(endDialog1, 25, endBegin1);
-          printDialog(endDialog2, 25, endBegin2);
-        }else{
-          printDialog(beginDialog, 10, dialog1Start);
-          printDialog(tutorialDialog, 30, tutorialBegin);
-          endBegin1 = glfwGetTime();
-          endBegin2 = endBegin1 + 30;
-        }
+            if(reachedAnEnd)
+            {
+                if(glfwGetTime() - endBegin2 > 20)
+                {
+                    engine->stopAllSounds();
+                    return;
+                }
+                printDialog(endDialog1, 25, endBegin1);
+                printDialog(endDialog2, 25, endBegin2);
+            }
+            else
+            {
+                printDialog(beginDialog, 10, dialog1Start);
+                printDialog(tutorialDialog, 30, tutorialBegin);
+                endBegin1 = glfwGetTime();
+                endBegin2 = endBegin1 + 30;
+            }
 
         }
 
         // Doesn't allow more than 10 arrows in the scene
-        if(arrows.size() > 10){
+        if(arrows.size() > 10)
+        {
             arrows.erase(arrows.begin(), arrows.begin() + 5);
         }
 
@@ -1290,21 +1286,18 @@ void playGame()
         youBBoxMin = Matrix_Translate(camera_position_c.x, camera_position_c.y, camera_position_c.z) * youBBoxMin;
 
         // Collision Enemies with Yourself
-        for(int e = 0; e < enemies.size(); e++){
+        for(unsigned e = 0; e < enemies.size(); e++)
+        {
             model = Matrix_Translate(enemies[e].pos.x, enemies[e].pos.y, enemies[e].pos.z)
-                 * Matrix_Scale(enemies[e].scale.x, enemies[e].scale.y + enemies[e].Y_deviation, enemies[e].scale.z);
+                    * Matrix_Scale(enemies[e].scale.x, enemies[e].scale.y + enemies[e].Y_deviation, enemies[e].scale.z);
 
             glm::vec4 bbox_max = model * glm::vec4(g_VirtualScene[enemies[e].name].bbox_max.x, g_VirtualScene[enemies[e].name].bbox_max.y, g_VirtualScene[enemies[e].name].bbox_max.z, 1.0f);
             glm::vec4 bbox_min = model * glm::vec4(g_VirtualScene[enemies[e].name].bbox_min.x, g_VirtualScene[enemies[e].name].bbox_min.y, g_VirtualScene[enemies[e].name].bbox_min.z, 1.0f);
 
-            if(areBBOXintersecting(youBBoxMin, youBBoxMax, bbox_min, bbox_max)){
+            if(areBBOXintersecting(youBBoxMin, youBBoxMax, bbox_min, bbox_max))
+            {
                 camera_position_c.y = -1.0f; //kills you
             }
-
-
-
-
-
 
         }
 
@@ -1324,83 +1317,86 @@ void playGame()
 
         whileTime = (glfwGetTime() * 10) - actualSecond;
     }
+    engine->stopAllSounds();
 }
 
-void draw3Enemies(glm::vec3 cubeCenter, float cubeHeight, float cubeRadius){
+void draw3Enemies(glm::vec3 cubeCenter, float cubeHeight, float cubeRadius)
+{
 
-  glm::mat4 model = Matrix_Identity();
+    glm::mat4 model = Matrix_Identity();
 
-  model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(2 * 3.14/3 + glfwGetTime()),
-                           cubeCenter[1] + cubeHeight/2,
-                           cubeCenter[2] + cubeRadius*cos(2 * 3.14/3 + glfwGetTime()))
-          * Matrix_Scale(0.125f, 0.125f, 0.125f);
-  glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-            glUniform1i(object_id_uniform, ARROW);
-            DrawVirtualObject("clyde");
+    model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(2 * 3.14/3 + glfwGetTime()),
+                             cubeCenter[1] + cubeHeight/2,
+                             cubeCenter[2] + cubeRadius*cos(2 * 3.14/3 + glfwGetTime()))
+            * Matrix_Scale(0.125f, 0.125f, 0.125f);
+    glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+    glUniform1i(object_id_uniform, ARROW);
+    DrawVirtualObject("clyde");
 
 
-  model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(4 * 3.14/3 + glfwGetTime()),
-                           cubeCenter[1] + cubeHeight/2,
-                           cubeCenter[2] + cubeRadius*cos(4 * 3.14/3 + glfwGetTime()))
-          * Matrix_Scale(0.25f, 0.25f, 0.25f);
-  glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-            glUniform1i(object_id_uniform, AIM);
-            DrawVirtualObject("pinky");
+    model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(4 * 3.14/3 + glfwGetTime()),
+                             cubeCenter[1] + cubeHeight/2,
+                             cubeCenter[2] + cubeRadius*cos(4 * 3.14/3 + glfwGetTime()))
+            * Matrix_Scale(0.25f, 0.25f, 0.25f);
+    glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+    glUniform1i(object_id_uniform, AIM);
+    DrawVirtualObject("pinky");
 
-  model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(2 * 3.14 + glfwGetTime()),
-                 cubeCenter[1] + cubeHeight/2,
-                 cubeCenter[2] + cubeRadius*cos(3.14/2 + glfwGetTime()))
-          * Matrix_Scale(0.25f, 0.25f, 0.25f);
-  glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-            glUniform1i(object_id_uniform, ARM);
-            DrawVirtualObject("inky");
+    model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(2 * 3.14 + glfwGetTime()),
+                             cubeCenter[1] + cubeHeight/2,
+                             cubeCenter[2] + cubeRadius*cos(3.14/2 + glfwGetTime()))
+            * Matrix_Scale(0.25f, 0.25f, 0.25f);
+    glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+    glUniform1i(object_id_uniform, ARM);
+    DrawVirtualObject("inky");
 }
 
-void draw5Enemies(glm::vec3 cubeCenter, float cubeHeight, float cubeRadius){
+void draw5Enemies(glm::vec3 cubeCenter, float cubeHeight, float cubeRadius)
+{
 
-  glm::mat4 model = Matrix_Identity();
+    glm::mat4 model = Matrix_Identity();
 
-  model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(2 * 3.14/5 + glfwGetTime()),
-                           cubeCenter[1] + cubeHeight/2,
-                           cubeCenter[2] + cubeRadius*cos(2 * 3.14/5 + glfwGetTime()))
-          * Matrix_Scale(0.25f, 0.25f, 0.25f);
-  glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-            glUniform1i(object_id_uniform, ARROW);
-            DrawVirtualObject("clyde");
-
-
-  model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(4 * 3.14/5 + glfwGetTime()),
-                           cubeCenter[1] + cubeHeight/2,
-                           cubeCenter[2] + cubeRadius*cos(4 * 3.14/5 + glfwGetTime()))
-          * Matrix_Scale(0.25f, 0.25f, 0.25f);
-  glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-            glUniform1i(object_id_uniform, AIM);
-            DrawVirtualObject("pinky");
-
-  model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(6 * 3.14/5 + glfwGetTime()),
-                 cubeCenter[1] + cubeHeight/2,
-                 cubeCenter[2] + cubeRadius*cos(6 * 3.14/5 + glfwGetTime()))
-          * Matrix_Scale(0.25f, 0.25f, 0.25f);
-  glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-            glUniform1i(object_id_uniform, ARM);
-            DrawVirtualObject("inky");
-
-  model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(8 * 3.14/5 + glfwGetTime()),
-                 cubeCenter[1] + cubeHeight/2,
-                 cubeCenter[2] + cubeRadius*cos(8 * 3.14/5 + glfwGetTime()))
-          * Matrix_Scale(0.25f, 0.25f, 0.25f);
-  glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-            glUniform1i(object_id_uniform, ARROW);
-            DrawVirtualObject("clyde");
+    model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(2 * 3.14/5 + glfwGetTime()),
+                             cubeCenter[1] + cubeHeight/2,
+                             cubeCenter[2] + cubeRadius*cos(2 * 3.14/5 + glfwGetTime()))
+            * Matrix_Scale(0.25f, 0.25f, 0.25f);
+    glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+    glUniform1i(object_id_uniform, ARROW);
+    DrawVirtualObject("clyde");
 
 
-  model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(2 * 3.14 + glfwGetTime()),
-                           cubeCenter[1] + cubeHeight/2,
-                           cubeCenter[2] + cubeRadius*cos(2 * 3.14 + glfwGetTime()))
-          * Matrix_Scale(0.25f, 0.25f, 0.25f);
-  glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-            glUniform1i(object_id_uniform, AIM);
-            DrawVirtualObject("pinky");
+    model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(4 * 3.14/5 + glfwGetTime()),
+                             cubeCenter[1] + cubeHeight/2,
+                             cubeCenter[2] + cubeRadius*cos(4 * 3.14/5 + glfwGetTime()))
+            * Matrix_Scale(0.25f, 0.25f, 0.25f);
+    glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+    glUniform1i(object_id_uniform, AIM);
+    DrawVirtualObject("pinky");
+
+    model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(6 * 3.14/5 + glfwGetTime()),
+                             cubeCenter[1] + cubeHeight/2,
+                             cubeCenter[2] + cubeRadius*cos(6 * 3.14/5 + glfwGetTime()))
+            * Matrix_Scale(0.25f, 0.25f, 0.25f);
+    glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+    glUniform1i(object_id_uniform, ARM);
+    DrawVirtualObject("inky");
+
+    model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(8 * 3.14/5 + glfwGetTime()),
+                             cubeCenter[1] + cubeHeight/2,
+                             cubeCenter[2] + cubeRadius*cos(8 * 3.14/5 + glfwGetTime()))
+            * Matrix_Scale(0.25f, 0.25f, 0.25f);
+    glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+    glUniform1i(object_id_uniform, ARROW);
+    DrawVirtualObject("clyde");
+
+
+    model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(2 * 3.14 + glfwGetTime()),
+                             cubeCenter[1] + cubeHeight/2,
+                             cubeCenter[2] + cubeRadius*cos(2 * 3.14 + glfwGetTime()))
+            * Matrix_Scale(0.25f, 0.25f, 0.25f);
+    glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+    glUniform1i(object_id_uniform, AIM);
+    DrawVirtualObject("pinky");
 }
 
 // Função que carrega uma imagem para ser utilizada como textura
@@ -2650,7 +2646,8 @@ void trataColisaoCubo(float novoX,float antigoY,float novoZ, int nearestCube,boo
             processaPouso(antigoY,cubos[nearestCube].y,cubos[nearestCube].dy,ALTURAHERO);
         }
         else
-        {   ///Pode apenas estar andando sobre a plataforma, ai só testa se ele nao bate em outra plataforma
+        {
+            ///Pode apenas estar andando sobre a plataforma, ai só testa se ele nao bate em outra plataforma
             if (entreLimites(camera_position_c.y,cubos[nearestCube].y,cubos[nearestCube].dy,ALTURAHERO -0.01f))
             {
                 *invadiuObjeto = true;
@@ -2658,7 +2655,8 @@ void trataColisaoCubo(float novoX,float antigoY,float novoZ, int nearestCube,boo
         }
     }
     else
-    {   ///Se antes ele estava sobre o "nada" (estava pulando e aos seus pes nao havia nada)
+    {
+        ///Se antes ele estava sobre o "nada" (estava pulando e aos seus pes nao havia nada)
         if(oldCubo == -1)
         {
             ///Testa se pousou sobre uma plataforma
@@ -2667,7 +2665,8 @@ void trataColisaoCubo(float novoX,float antigoY,float novoZ, int nearestCube,boo
 
             }
             else
-            {   ///Testa se bateu de frente numa plataforma pois nao caiu acima dela
+            {
+                ///Testa se bateu de frente numa plataforma pois nao caiu acima dela
                 if (entreLimites(camera_position_c.y,cubos[nearestCube].y,cubos[nearestCube].dy,ALTURAHERO -0.01f))
                 {
 
@@ -2802,8 +2801,13 @@ ArrowType selectArrowType()
     {
         return plataform;
     }
-    else if(pressT){
+    else if(pressT)
+    {
         return teleport;
+    }
+    else
+    {
+        return normal;
     }
 }
 
@@ -2825,32 +2829,6 @@ void handleTeleport(float * novoX,float * novoZ, std::vector<Cubo> cubos, glm::v
         DOUBLEJUMPING = false;
         TELEPORTED = false;
     }
-
-}
-
-///Limites do angulo quando se esta no menu da vaca para ela sempre ficar focada
-void angleLimits()
-{
-
-    if(g_CameraTheta > MAX_THETA_MENU)
-    {
-        g_CameraTheta = MAX_THETA_MENU;
-    }
-    else if(g_CameraTheta < MIN_THETA_MENU)
-    {
-        g_CameraTheta = MIN_THETA_MENU;
-    }
-
-    if(g_CameraPhi > MAX_PHI_MENU)
-    {
-        g_CameraPhi = MAX_PHI_MENU;
-    }
-    else if(g_CameraPhi < MIN_PHI_MENU)
-    {
-        g_CameraPhi = MIN_PHI_MENU;
-    }
-
-
 
 }
 
@@ -2880,15 +2858,49 @@ void aplicaGravidade()
 void loadCubesPositions(std::vector<Cubo> &cubos)
 {
 
-    cubos.push_back(Cubo(-1.5f, 0.6f, 0.0f, 4.0f, 4.0f, 4.0f,CUBE,false));
-    cubos.push_back(Cubo(4.0f, 1.2f, 0.0f, 4.0f, 4.0f, 4.0f,CUBE1,false));
-    cubos.push_back(Cubo(7.5f, 0.12f, -7.5f, 4.0f, 4.0f, 4.0f,CUBE2,false));
-    cubos.push_back(Cubo(14.0f, 0.16f, -20.5f, 4.0f, 4.0f, 12.0f,CUBE,false));
-    cubos.push_back(Cubo(3.5f, 0.9f, -16.5f, 1.9f, 2.0f, 5.0f,CUBE,false));
-    cubos.push_back(Cubo(7.5f, 0.9f, -20.5f, 5.0f, 5.0f, 1.9f,CUBE2,false));
-    cubos.push_back(Cubo(17.5f, 3.0f, -20.5f, 4.0f, 4.0f, 12.0f,CUBE2,false));
+    cubos.push_back(Cubo(-1.5f, 0.6f, 0.0f, 4.0f, 4.0f, 4.0f,CUBE));
+    cubos.push_back(Cubo(4.0f, 1.2f, 0.0f, 4.0f, 4.0f, 4.0f,CUBE1));
+    cubos.push_back(Cubo(7.5f, 0.12f, -7.5f, 4.0f, 4.0f, 4.0f,CUBE2));
+    cubos.push_back(Cubo(14.0f, 0.16f, -20.5f, 4.0f, 4.0f, 12.0f,CUBE));
+    cubos.push_back(Cubo(3.5f, 0.9f, -16.5f, 1.9f, 2.0f, 5.0f,CUBE));
+    cubos.push_back(Cubo(7.5f, 0.9f, -20.5f, 5.0f, 5.0f, 1.9f,CUBE2));
+    cubos.push_back(Cubo(17.5f, 3.0f, -20.5f, 4.0f, 4.0f, 12.0f,CUBE2));
 
-    cubos.push_back(Cubo(0,0,0,1,1,1,CUBE,false)); // Cubo usado para criar plataforma
+    cubos.push_back(Cubo(0,0,0,1,1,1,CUBE)); // Cubo usado para criar plataforma
 }
 // set makeprg=cd\ ..\ &&\ make\ run\ >/dev/null
 // vim: set spell spelllang=pt_br :
+
+void drawBackground(glm::vec4 &wallpaperPos){
+
+        model = Matrix_Translate(wallpaperPos.x, wallpaperPos.y + 250, wallpaperPos.z)
+                *Matrix_Rotate_Z(3.141592)
+                *Matrix_Scale(500,1,500);
+        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        glUniform1i(object_id_uniform, WALLPAPER);
+        DrawVirtualObject("cube");
+        model = Matrix_Translate(wallpaperPos.x + 250, wallpaperPos.y, wallpaperPos.z)
+                *Matrix_Rotate_Z(3.141592)
+                *Matrix_Scale(1,500,500);
+        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        glUniform1i(object_id_uniform, WALLPAPER);
+        DrawVirtualObject("cube");
+        model = Matrix_Translate(wallpaperPos.x - 250, wallpaperPos.y, wallpaperPos.z)
+                *Matrix_Rotate_Z(3.141592)
+                *Matrix_Scale(1,500,500);
+        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        glUniform1i(object_id_uniform, WALLPAPER);
+        DrawVirtualObject("cube");
+        model = Matrix_Translate(wallpaperPos.x, wallpaperPos.y, wallpaperPos.z + 250)
+                *Matrix_Rotate_Z(3.141592)
+                *Matrix_Scale(500,500,1);
+        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        glUniform1i(object_id_uniform, WALLPAPER);
+        DrawVirtualObject("cube");
+        model = Matrix_Translate(wallpaperPos.x, wallpaperPos.y, wallpaperPos.z - 250)
+                *Matrix_Rotate_Z(3.141592)
+                *Matrix_Scale(500,500,1);
+        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        glUniform1i(object_id_uniform, WALLPAPER);
+        DrawVirtualObject("cube");
+}
