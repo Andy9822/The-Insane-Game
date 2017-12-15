@@ -77,13 +77,16 @@
 #define ARROW 6
 #define ARROWT 7
 #define ARROWP 8
-#define GHOST 9
-#define CUBE 10
-#define CUBE1 11
-#define CUBE2 12
-#define COW 13
-#define WALLPAPER 14
-#define MOON 15
+#define CUBE 9
+#define CUBE1 10
+#define CUBE2 11
+#define COW 12
+#define WALLPAPER 13
+#define MOON 14
+#define GHOST1 15
+#define GHOST2 16
+#define GHOST3 17
+#define GHOST4 18
 
 using namespace std;
 // Estrutura que representa um modelo geométrico carregado a partir de um
@@ -203,6 +206,7 @@ void draw3Enemies(glm::vec3 cubeCenter, float cubeHeight, float cubeRadius);
 void draw5Enemies(glm::vec3 cubeCenter, float cubeHeight, float cubeRadius);
 void createEnemies(int numEnemies, std::vector<Enemy>* enemies, Cubo referenceCube);
 void createRandomNextCube(vector<Cubo> *cubos, Cubo present);
+void generateFinalPlataform(vector<Cubo> *cubos, Cubo last);
 
 ///Prototipos das funcoes feitas pelo Andy
 bool entreLimites(float posCamera, float eixo, float delta,float erro);
@@ -220,6 +224,7 @@ void resetLife(float *novoX,float *novoZ,std::vector<Cubo> &cubos);
 ArrowType selectArrowType();
 void handleTeleport(float * novoX,float * novoZ,std::vector<Cubo> cubos, glm::vec4 teleportPos);
 void loadCubesPositions(std::vector<Cubo> &cubos);
+void printDialog(std::vector<std::string> dialog, double time, double startTime);
 
 
 // Variáveis que definem um programa de GPU (shaders). Veja função LoadShadersFromFiles().
@@ -422,14 +427,18 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif"); // TextureImage1
     LoadTextureImage("../../data/skin.jpg");      // TextureImage2
     LoadTextureImage("../../data/bowText.jpg");      // TextureImage3
-    LoadTextureImage("../../data/ghost/ghostText.png");      // TextureImage4
+
+    LoadTextureImage("../../data/moon.jpg");      // TextureImage4
 
     LoadTextureImage("../../data/cube/hazard.jpg");      // TextureImage5
     LoadTextureImage("../../data/cube/bloc.jpg");      // TextureImage6
     LoadTextureImage("../../data/cube/box2.jpg");      // TextureImage7
     LoadTextureImage("../../data/ghost/normalMap.png");      // TextureImage8
     LoadTextureImage("../../data/space.jpg");      // TextureImage9
-    LoadTextureImage("../../data/moon.jpg");      // TextureImage10
+    LoadTextureImage("../../data/ghost/ghostText.png");      // TextureImage10
+    LoadTextureImage("../../data/ghost/ghostTextBlue.jpg");      // TextureImage11
+    LoadTextureImage("../../data/ghost/ghostTextBlack.jpg");      // TextureImage12
+    LoadTextureImage("../../data/ghost/ghostTextSaturated.jpg");      // TextureImage13
 
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
@@ -444,10 +453,6 @@ int main(int argc, char* argv[])
     ObjModel planemodel("../../data/plane.obj");
     ComputeNormals(&planemodel);
     BuildTrianglesAndAddToVirtualScene(&planemodel);
-
-    ObjModel planemodel2("../../data/plane2.obj");
-    ComputeNormals(&planemodel2);
-    BuildTrianglesAndAddToVirtualScene(&planemodel2);
 
     ObjModel cowmodel("../../data/cow.obj");
     ComputeNormals(&cowmodel);
@@ -532,21 +537,38 @@ int main(int argc, char* argv[])
     glm::mat4 the_model;
     glm::mat4 the_view;
 
-    int opMenu = menu();
-    switch(opMenu){
+    while(true){
+      int opMenu = menu();
+      switch(opMenu){
 
-        case 0 :
-            playGame();
-            break;
+          case 0 :
+              playGame();
+              break;
+          case 2:
+            return 0;
+              break;
 
+
+      }
     }
-
 
     // Finalizamos o uso dos recursos do sistema operacional
     glfwTerminate();
 
     // Fim do programa
     return 0;
+}
+
+void printDialog(vector<std::string> dialog, double time, double startTime){
+
+  if(glfwGetTime() - startTime < time && glfwGetTime() - startTime > 0){
+   int counter = 0;
+   for(int i = 0; i<dialog.size(); i++){
+     TextRendering_PrintString(window, dialog[i], 0.0f, 0.5f - counter*0.075f, 3.0f);
+     counter++;
+   }
+  }
+
 }
 
 void createEnemies(int numEnemies, std::vector<Enemy>* enemies, Cubo referenceCube){
@@ -577,7 +599,7 @@ void createEnemies(int numEnemies, std::vector<Enemy>* enemies, Cubo referenceCu
     }
 }
 
-void createRandomNextCube(vector<Cubo> *cubos, Cubo present){
+void createRandomNextCube(vector<Cubo> *cubos, Cubo present, int color){
 
   srand(time(NULL));
 
@@ -598,9 +620,15 @@ void createRandomNextCube(vector<Cubo> *cubos, Cubo present){
   float diffy = 5.0f;
   float ry = randomy * diffy;
 
-  int rColor = rand() % 10 + 1;
 
-  cubos->push_back(Cubo(present.x - 25.0f + rx, present.y + ry, present.z - 10.0f + rz,10.0f, 1.0f, 10.0f, rColor, false));
+  cubos->push_back(Cubo(present.x - 25.0f + rx, present.y + ry, present.z - 10.0f + present.dz + rz,10.0f, 1.0f, 10.0f, color, false));
+}
+
+
+void generateFinalPlataform(vector<Cubo> *cubos, Cubo last){
+
+  cubos->push_back(Cubo(last.x, last.y , last.z + last.dz/2 + 100.0f ,100.0f, 1.0f, 100.0f, 1, false));
+
 }
 
 int menu()
@@ -612,8 +640,8 @@ int menu()
     float startSize = 2.5f;
     float optionPos = -0.65f;
     float optionSize = 1.0f;
-    float instructionPos = -0.8f;
-    float instructionSize = 1.0f;
+    float exitPos = -0.8f;
+    float exitSize = 1.0f;
 
     int selectPos = 0;
 
@@ -643,17 +671,17 @@ int menu()
             case 0:
                 startSize = 2.5f;
                 optionSize = 1.0f;
-                instructionSize = 1.0f;
+                exitSize = 1.0f;
                 break;
             case 1:
                 startSize = 1.0f;
                 optionSize = 2.5f;
-                instructionSize = 1.0f;
+                exitSize = 1.0f;
                 break;
             case 2:
                 startSize = 1.0f;
                 optionSize = 1.0f;
-                instructionSize = 2.5f;
+                exitSize = 2.5f;
                 break;
             default:
                 break;
@@ -728,7 +756,7 @@ int menu()
 
         TextRendering_PrintString(window, "Start", 0.0f, startPos, startSize);
         TextRendering_PrintString(window, "Options", 0.0f, optionPos, optionSize);
-        TextRendering_PrintString(window, "Instructions", 0.0f, instructionPos, instructionSize);
+        TextRendering_PrintString(window, "exit", 0.0f, exitPos, exitSize);
 
         glfwSwapBuffers(window);
 
@@ -747,9 +775,17 @@ int menu()
 }
 
 
+
 void playGame()
 {
 
+    double dialog1Start = glfwGetTime();
+    double tutorialBegin = dialog1Start + 15;
+    double endBegin1 = 0;
+    double endBegin2 = 0;
+    int waveCounter = -1;
+    int waveCounterLimit = 2;
+    bool reachedAnEnd = false;
     int stretchCount = 0;
     float enemiesSpawnController = glfwGetTime();
     double stretchController = glfwGetTime();
@@ -764,6 +800,9 @@ void playGame()
     std::vector<Arrow> arrows;
     std::vector<Enemy> enemies;
 
+    int cubeText = 0;
+    int enemyText = 0;
+
     resetLife(&novoX, &novoZ, cubos);
 
     ArrowType arrowType = normal;
@@ -774,9 +813,39 @@ void playGame()
 
     glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
 
+    std::vector<std::string> beginDialog;
+    beginDialog.push_back("Come find me...");
+    beginDialog.push_back("Release the ultimate power...");
+
+    std::vector<std::string> tutorialDialog;
+    tutorialDialog.push_back("Press WASD to walk");
+    tutorialDialog.push_back("Press SPACE to jump(2x quickly to jump higher)");
+    tutorialDialog.push_back("E - NORMAL ARROW");
+    tutorialDialog.push_back("R - PLATAFORM CREATION ARROW");
+    tutorialDialog.push_back("T - TELEPORT ARROW");
+
+
+    std::vector<std::string> endDialog1;
+    endDialog1.push_back("Thank you for releasing me...");
+    endDialog1.push_back("For you have been my only hope");
+    endDialog1.push_back("fearless human,");
+    endDialog1.push_back("I will give you knowledge!");
+    std::vector<std::string> endDialog2;
+    endDialog2.push_back("The earth is not round as you foolish");
+    endDialog2.push_back("beigns think it is...");
+    endDialog2.push_back("The earth is actually");
+    endDialog2.push_back("A full set of triangle meshes that");
+    endDialog2.push_back(" simulates an elipsoid...");
+    endDialog2.push_back("Now may us part ways");
+    endDialog2.push_back("and never see each other again...");
+
+
+
+
     // Ficamos em loop, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
     {
+
         if(glfwGetTime() - stretchController > 0.02 && stretchCount+1 < 20 && charging){
 
           stretchCount++;
@@ -861,6 +930,7 @@ void playGame()
 
         glDepthMask(true);
 
+
             model = Matrix_Translate(0,-10,0) * Matrix_Scale(1000,0,1000);
             glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
             glUniform1i(object_id_uniform, MOON);
@@ -874,6 +944,8 @@ void playGame()
         {
             atualizaPulo();
         }
+
+
         processaMovimentos(WASD,antigoX,&novoX,antigoZ,&novoZ,antigoY, cubos, teleportPosition);
 
         // Computamos a matriz "View" utilizando os parâmetros da câmera para
@@ -913,6 +985,12 @@ void playGame()
         }
         if(DIED && !enterPressed)
         {
+            waveCounter = -1;
+            enemies.clear();
+            for(int i = 2; i<cubos.size(); i++){
+              cubos.pop_back();
+            }
+            reachedAnEnd = false;
             TextRendering_PrintString(window, "YOU DIED", -0.5f, 0.0f, 5.0f);
             TextRendering_PrintString(window, "Press enter to continue...", -0.5f, -0.5f, 1.0f);
         }
@@ -961,9 +1039,6 @@ void playGame()
                                   + ((float)stretchCount/(19)) * 0.1f*u + (1 -((float)stretchCount/(19))) * 0.1f*u
                                   + ((float)stretchCount/(19)) * -0.25f*v + (1 -((float)stretchCount/(19))) * -0.25f*v;
 
-                                  /*((float)stretchCount/(19)) * 1.5f*camera_view_vector + (1 -((float)stretchCount/(19))) * 1.0f*camera_view_vector
-                                  + ((float)stretchCount/(19)) * 0.05f*u + (1 -((float)stretchCount/(19))) * 0.1f*u
-                                  + ((float)stretchCount/(19)) * -0.55f*v + (1 -((float)stretchCount/(19))) * -0.25f*v;*/
 
             model =  Matrix_Translate(camera_position_c[0] + righthandPos[0],
                                       camera_position_c[1] + righthandPos[1],
@@ -998,9 +1073,39 @@ void playGame()
                 }
             }
 
-            if(enemies.size() == 0){
-                createRandomNextCube(&cubos, cubos[cubos.size()-1]);
-                createEnemies(cubos.size(), &enemies, cubos[cubos.size()-1]);
+            if(!reachedAnEnd){
+              if(waveCounter == waveCounterLimit ){
+                  reachedAnEnd = true;
+                  waveCounter = waveCounterLimit;
+                  generateFinalPlataform(&cubos, cubos[cubos.size()-1]);
+              }
+              else{
+                if(enemies.size() == 0){
+                    if(waveCounter>=0){
+                      createRandomNextCube(&cubos, cubos[cubos.size()-1], cubeText + 9);
+                    }
+
+                    createEnemies(cubos.size(), &enemies, cubos[cubos.size()-1]);
+                    waveCounter++;
+                    enemyText++;
+                    cubeText++;
+                    if(enemyText > 3){
+                      enemyText = 0;
+                    }
+                    if(cubeText > 2){
+                      cubeText = 0;
+                    }
+                }
+              }
+            }else{
+              enemies.clear();
+              model = Matrix_Translate(cubos[cubos.size()-1].x, cubos[cubos.size()-1].y + cubos[cubos.size()-1].dy + 5, cubos[cubos.size()-1].z)
+              *Matrix_Rotate_Y(3.14/2)
+              *Matrix_Scale(10, 10, 10);
+
+              glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+              glUniform1i(object_id_uniform, COW);
+              DrawVirtualObject("cow");
             }
             for(unsigned i = 0; i < enemies.size(); i++){
 
@@ -1010,7 +1115,7 @@ void playGame()
                          * Matrix_Rotate_Y(enemies[i].rotation_Y)
                          * Matrix_Scale(enemies[i].scale.x, enemies[i].scale.y + enemies[i].Y_deviation, enemies[i].scale.z);
                   glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-                  glUniform1i(object_id_uniform, GHOST);
+                  glUniform1i(object_id_uniform, enemyText + 15);
                   DrawVirtualObject(enemies[i].name.c_str());
             }
 
@@ -1147,6 +1252,31 @@ void playGame()
 
             }
             arrowRateController--;
+
+
+        std::stringstream waveSST;
+        waveSST << (int) (waveCounter);
+        std::stringstream waveMaxSST;
+        waveMaxSST << (int) (waveCounterLimit);
+        std::string waveString = "wave: " + waveSST.str() + "/" + waveMaxSST.str();
+        TextRendering_PrintString(window, waveString, -0.9f, 0.8f, 5.0f);
+
+
+        ///DIALOGOS COMEÇAM AQUI
+
+        if(reachedAnEnd){
+          if(glfwGetTime() - endBegin2 > 20){
+            return;
+          }
+          printDialog(endDialog1, 25, endBegin1);
+          printDialog(endDialog2, 25, endBegin2);
+        }else{
+          printDialog(beginDialog, 10, dialog1Start);
+          printDialog(tutorialDialog, 30, tutorialBegin);
+          endBegin1 = glfwGetTime();
+          endBegin2 = endBegin1 + 30;
+        }
+
         }
 
         // Doesn't allow more than 10 arrows in the scene
@@ -1162,15 +1292,20 @@ void playGame()
         // Collision Enemies with Yourself
         for(int e = 0; e < enemies.size(); e++){
             model = Matrix_Translate(enemies[e].pos.x, enemies[e].pos.y, enemies[e].pos.z)
-                // * Matrix_Rotate_Y(enemies[e].rotation_Y)  ver pq isso aqui faz não funcionar!
                  * Matrix_Scale(enemies[e].scale.x, enemies[e].scale.y + enemies[e].Y_deviation, enemies[e].scale.z);
 
             glm::vec4 bbox_max = model * glm::vec4(g_VirtualScene[enemies[e].name].bbox_max.x, g_VirtualScene[enemies[e].name].bbox_max.y, g_VirtualScene[enemies[e].name].bbox_max.z, 1.0f);
             glm::vec4 bbox_min = model * glm::vec4(g_VirtualScene[enemies[e].name].bbox_min.x, g_VirtualScene[enemies[e].name].bbox_min.y, g_VirtualScene[enemies[e].name].bbox_min.z, 1.0f);
 
             if(areBBOXintersecting(youBBoxMin, youBBoxMax, bbox_min, bbox_max)){
-                camera_position_c.y = -10.0f; //kills you
+                camera_position_c.y = -1.0f; //kills you
             }
+
+
+
+
+
+
         }
 
         // O framebuffer onde OpenGL executa as operações de renderização não
@@ -1410,6 +1545,9 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(program_id, "TextureImage8"), 8);
     glUniform1i(glGetUniformLocation(program_id, "TextureImage9"), 9);
     glUniform1i(glGetUniformLocation(program_id, "TextureImage10"), 10);
+    glUniform1i(glGetUniformLocation(program_id, "TextureImage11"), 11);
+    glUniform1i(glGetUniformLocation(program_id, "TextureImage12"), 12);
+    glUniform1i(glGetUniformLocation(program_id, "TextureImage13"), 13);
     glUseProgram(0);
 }
 
@@ -2400,7 +2538,8 @@ void PrintObjModelInfo(ObjModel* model)
 
 void resetLife(float *novoX,float *novoZ,std::vector<Cubo> &cubos)
 {
-    camera_position_c = START_POSITION;
+
+    camera_position_c = glm::vec4(cubos[1].x, cubos[1].y + cubos[1].dy/2 + ALTURAHERO, cubos[1].z, 1.0f);
     CAINDO = false;
     *novoX = camera_position_c.x;
     *novoZ = camera_position_c.z;
@@ -2617,7 +2756,7 @@ void processaMovimentos(bool WASD,float antigoX,float * novoX,float antigoZ,floa
     if(TELEPORTED)
         handleTeleport(novoX, novoZ, cubos, teleportPos);
 
-    if(WASD || CAINDO || JUMPING || MAGICPLATFORM)
+    if(WASD || CAINDO || JUMPING || MAGICPLATFORM || DIED)
     {
         bool invadiuObjeto = false;
         MAGICPLATFORM = false;
@@ -2720,7 +2859,7 @@ void aplicaGravidade()
 {
     if (JUMPING)
     {
-        camera_position_c.y +=  0.8*whileTime;
+        camera_position_c.y +=  whileTime;
         if(actualSecond - startJump > 3)
         {
             JUMPING = false;

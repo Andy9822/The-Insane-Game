@@ -18,6 +18,7 @@ uniform mat4 view;
 uniform mat4 projection;
 
 // Identificador que define qual objeto está sendo desenhado no momento
+
 #define SPHERE 0
 #define BUNNY  1
 #define PLANE  2
@@ -27,13 +28,17 @@ uniform mat4 projection;
 #define ARROW 6
 #define ARROWT 7
 #define ARROWP 8
-#define GHOST 9
-#define CUBE 10
-#define CUBE1 11
-#define CUBE2 12
-#define COW 13
-#define WALLPAPER 14
-#define MOON 15
+#define CUBE 9
+#define CUBE1 10
+#define CUBE2 11
+#define COW 12
+#define WALLPAPER 13
+#define MOON 14
+#define GHOST1 15
+#define GHOST2 16
+#define GHOST3 17
+#define GHOST4 18
+
 
 uniform int object_id;
 
@@ -53,6 +58,9 @@ uniform sampler2D TextureImage7;
 uniform sampler2D TextureImage8;
 uniform sampler2D TextureImage9;
 uniform sampler2D TextureImage10;
+uniform sampler2D TextureImage11;
+uniform sampler2D TextureImage12;
+uniform sampler2D TextureImage13;
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec3 color;
@@ -227,11 +235,41 @@ void main()
         q = 10.0;
         break;
 
-    case GHOST:
+    case GHOST1:
 
         U = texcoords.x;
         V = texcoords.y;
-        Kd = texture(TextureImage4, vec2(U,V)).rgb;
+        Kd = texture(TextureImage10, vec2(U,V)).rgb;
+        Ks = vec3(0.0f, 0.0f, 0.0f);
+        Ka = Kd / 2;
+        q = 1;
+        break;
+
+    case GHOST2:
+
+        U = texcoords.x;
+        V = texcoords.y;
+        Kd = texture(TextureImage11, vec2(U,V)).rgb;
+        Ks = vec3(0.0f, 0.0f, 0.0f);
+        Ka = Kd / 2;
+        q = 1;
+        break;
+
+    case GHOST3:
+
+        U = texcoords.x;
+        V = texcoords.y;
+        Kd = texture(TextureImage12, vec2(U,V)).rgb;
+        Ks = vec3(0.0f, 0.0f, 0.0f);
+        Ka = Kd / 2;
+        q = 1;
+        break;
+
+    case GHOST4:
+
+        U = texcoords.x;
+        V = texcoords.y;
+        Kd = texture(TextureImage13, vec2(U,V)).rgb;
         Ks = vec3(0.0f, 0.0f, 0.0f);
         Ka = Kd / 2;
         q = 1;
@@ -281,7 +319,7 @@ void main()
         U = texcoords.x;
         V = texcoords.y;
         // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
-        Kd = texture(TextureImage10, vec2(U,V)).rgb;
+        Kd = texture(TextureImage4, vec2(U,V)).rgb;
 
         Ks = vec3(0.0f,0.0f,0.0f);
         Ka = vec3(0.0f,0.0f,0.0f);
@@ -316,9 +354,8 @@ void main()
     else
     {
 
-        if(object_id == GHOST){
+        if(object_id >= GHOST1){
 
-          vec3 Kd2 = texture(TextureImage4, vec2(U,V)).rgb;
           vec3 Kd3 = texture(TextureImage8, vec2(U,V)).rgb;
 
           Kd3 = 2*Kd3 - 1;
