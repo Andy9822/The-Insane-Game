@@ -214,16 +214,19 @@ bool caiuDemais(float antigoEixo,float novoEixo, float posEixo, float delta, flo
 void processaWASD(float *novoX,float antigoX,float *novoZ,float antigoZ,float deslocamento,glm::vec4 u,glm::vec4 w);
 void atualizaPulo();
 void testaChao(float novoX,float novoZ,unsigned int *startFall,unsigned int actualSecond,std::vector<Cubo> cubos);
-void trataColisaoCubo(float novoX,float antigoY,float novoZ, int nearestCube,bool *invadiuObjeto,std::vector<Cubo> cubos);
+void trataColisaoCubo(float novoX,float antigoY,float novoZ, int nearestCube,bool *invadiuObjeto,bool *pousou,std::vector<Cubo> cubos);
 bool processaPouso(float antigoY,float cuboY,float cuboDY,float correcao);
 void processaMovimentos(bool WASD,float antigoX,float *novoX,float antigoZ,float *novoZ,float antigoY,std::vector<Cubo> &cubos, glm::vec4 teleportPos);
+void loadLevelPlatforms(std::vector<Cubo> &cubos);
 void aplicaGravidade();
 void processaColisao(float novoX,float antigoY,float novoZ,bool *invadiuObjeto,std::vector<Cubo> cubos);
+void testCheckPoint(int nearestCube,std::vector<Cubo> cubos);
 int getNearestCube(float novoX,float antigoY,float novoZ,std::vector<Cubo> cubos);
 void resetLife(float *novoX,float *novoZ,std::vector<Cubo> &cubos);
 ArrowType selectArrowType();
 void handleTeleport(float * novoX,float * novoZ,std::vector<Cubo> cubos, glm::vec4 teleportPos);
-void loadCubesPositions(std::vector<Cubo> &cubos);
+void loadFirstMap(std::vector<Cubo> &cubos);
+void loadSecondMap(std::vector<Cubo> &cubos);
 void printDialog(std::vector<std::string> dialog, double time, double startTime);
 
 
@@ -308,7 +311,8 @@ bool enterPressed = false;
 bool busyWKey = false;
 bool busySKey = false;
 bool busyJUMPKey = false;
-
+bool endingPlatform = false;
+int level = 1;
 ///Variaveis tiradas de serem globais
 bool WASD = false;
 float antigoY = 0;
@@ -434,7 +438,7 @@ int main(int argc, char* argv[])
 
     LoadTextureImage("../../data/cube/hazard.jpg");      // TextureImage5
     LoadTextureImage("../../data/cube/bloc.jpg");      // TextureImage6
-    LoadTextureImage("../../data/cube/box2.jpg");      // TextureImage7
+    LoadTextureImage("../../data/cube/box222.jpg");      // TextureImage7
     LoadTextureImage("../../data/ghost/normalMap.png");      // TextureImage8
     LoadTextureImage("../../data/space.jpg");      // TextureImage9
     LoadTextureImage("../../data/ghost/ghostText.png");      // TextureImage10
@@ -891,10 +895,8 @@ void playGame()
     double arrowRateController = 0;
     enterPressed = false;
     std::vector<Cubo> cubos;
-    Cubo creatableCube(0,0,0,10.0f,1.0f,10.0f,0);
-    cubos.push_back(creatableCube);
-    //loadCubesPositions(cubos);
-    cubos.push_back(Cubo(0.0f,0.0f,0.0f,10.0f,1.0f,10.0f,5));
+    loadFirstMap(cubos);
+
 
     std::vector<Arrow> arrows;
     std::vector<Enemy> enemies;
@@ -977,9 +979,20 @@ void playGame()
         u = u/norm(u);
         glm::vec4 v = crossproduct(w,u);
 
+        ///Caso troque de fase
+        if(endingPlatform){
+            cubos.clear();
+            loadLevelPlatforms(cubos);
+            novoX = camera_position_c.x;
+            novoZ = camera_position_c.z;
+            endingPlatform = false;
+            CAINDO = true;
+        }
+
         antigoX = camera_position_c.x;
         antigoZ = camera_position_c.z;
         WASD = pressA || pressD || pressS || pressW;
+
 
         //Desenha wallpaper
         glDepthMask(false);
@@ -1052,10 +1065,10 @@ void playGame()
         {
             waveCounter = -1;
             enemies.clear();
-            for(unsigned i = 2; i < cubos.size(); i++)
+            /*for(unsigned i = 2; i < cubos.size(); i++)
             {
                 cubos.pop_back();
-            }
+            }*/
             reachedAnEnd = false;
             TextRendering_PrintString(window, "YOU DIED", -0.5f, 0.0f, 5.0f);
             TextRendering_PrintString(window, "Press enter to continue...", -0.5f, -0.5f, 1.0f);
@@ -1130,7 +1143,7 @@ void playGame()
             for(unsigned i = 0; i < cubos.size(); i++)
             {
                 model = Matrix_Translate(cubos[i].x,cubos[i].y,cubos[i].z)
-                        * Matrix_Scale(cubos[i].dx * 0.9,cubos[i].dy,cubos[i].dz * 0.9);
+                        * Matrix_Scale(cubos[i].dx ,cubos[i].dy,cubos[i].dz );
                 glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
                 glUniform1i(object_id_uniform, cubos[i].textureCode);
                 DrawVirtualObject("cube");
@@ -1148,11 +1161,12 @@ void playGame()
                 {
                     if(enemies.size() == 0)
                     {
-                        if(waveCounter>=0)
+                        if(endingPlatform && waveCounter>=0)
                         {
                             createRandomNextCube(&cubos, cubos[cubos.size()-1], cubeText + 9);
                             createRandomNextCube(&cubos, cubos[cubos.size()-1], cubeText + 9);
                             createRandomNextCube(&cubos, cubos[cubos.size()-1], cubeText + 9);
+                            endingPlatform = false;
                         }
 
                         createEnemies(cubos.size(), &enemies, cubos[cubos.size()-1]);
@@ -2628,16 +2642,17 @@ void PrintObjModelInfo(ObjModel* model)
 void resetLife(float *novoX,float *novoZ,std::vector<Cubo> &cubos)
 {
 
-    camera_position_c = glm::vec4(cubos[1].x, cubos[1].y + cubos[1].dy/2 + ALTURAHERO, cubos[1].z, 1.0f);
+    //camera_position_c = glm::vec4(cubos[1].x, cubos[1].y + cubos[1].dy/2 + ALTURAHERO, cubos[1].z, 1.0f);
+    camera_position_c = glm::vec4(cubos[16].x, cubos[16].y + cubos[16].dy/2 + ALTURAHERO, cubos[16].z, 1.0f);
     CAINDO = false;
     *novoX = camera_position_c.x;
     *novoZ = camera_position_c.z;
     g_CameraTheta = INITIAL_THETA;
     g_CameraPhi = INITIAL_PHI;
+    level = 1;
+    cubos.clear();
+    loadLevelPlatforms(cubos);
 
-    cubos[0].x = 0;
-    cubos[0].y = 0;
-    cubos[0].z = 0;
 }
 
 ///Testa se uma coordenada de 1 dos eixos (x y ou z ) da camera esta entre o maior e menor valor dessa
@@ -2728,7 +2743,7 @@ void testaChao(float novoX,float novoZ,unsigned int *startFall,unsigned int actu
 
 
 ///Funcao principal de tratar colisao. Deriva em varias funcoes menores para cada ocasiao especifica
-void trataColisaoCubo(float novoX,float antigoY,float novoZ, int nearestCube,bool *invadiuObjeto,std::vector<Cubo> cubos)
+void trataColisaoCubo(float novoX,float antigoY,float novoZ, int nearestCube,bool *invadiuObjeto,bool *pousou,std::vector<Cubo> cubos)
 {
     ///Se ele permanecceu nos limites do mesmo cubo, ou ele está andando sobre ele ou apenas está caindo ainda na zona delimitada pelo cubo
     if(nearestCube == oldCubo)
@@ -2736,7 +2751,7 @@ void trataColisaoCubo(float novoX,float antigoY,float novoZ, int nearestCube,boo
         ///Se tem variacao no Y pode ter pousado pois estaav caindo
         if(antigoY != camera_position_c.y && antigoY >= cubos[nearestCube].y + (cubos[nearestCube].dy)/2 + ALTURAHERO - 0.1f )
         {
-            processaPouso(antigoY,cubos[nearestCube].y,cubos[nearestCube].dy,ALTURAHERO);
+            (*pousou) = processaPouso(antigoY,cubos[nearestCube].y,cubos[nearestCube].dy,ALTURAHERO);
         }
         else
         {
@@ -2811,16 +2826,20 @@ int getNearestCube(float novoX,float antigoY,float novoZ,std::vector<Cubo> cubos
 void processaColisao(float novoX,float antigoY,float novoZ,bool *invadiuObjeto,std::vector<Cubo> cubos)
 {
     int nearestCube = getNearestCube(novoX,antigoY,novoZ,cubos);
-    //std::cout<< oldCubo <<std::endl;
+    bool pousou = false;
     if (nearestCube!= -1)
     {
-        trataColisaoCubo(novoX,antigoY,novoZ,nearestCube,invadiuObjeto,cubos);
+        trataColisaoCubo(novoX,antigoY,novoZ,nearestCube,invadiuObjeto,&pousou,cubos);
+        if (pousou){
+            testCheckPoint(nearestCube,cubos);
+        }
+
     }
     if (*invadiuObjeto == true)
     {
         cubos.erase(cubos.begin() + nearestCube);
         float nearestCubeBelow = getNearestCube(novoX,antigoY,novoZ,cubos);
-        trataColisaoCubo(novoX,antigoY,novoZ,nearestCubeBelow,invadiuObjeto,cubos);
+        trataColisaoCubo(novoX,antigoY,novoZ,nearestCubeBelow,invadiuObjeto,&pousou,cubos);
         nearestCube = nearestCubeBelow;
     }
 
@@ -2838,6 +2857,16 @@ bool processaPouso(float antigoY,float cuboY,float cuboDY,float correcao)
         return true;
     }
     return false;
+}
+
+void loadLevelPlatforms(std::vector<Cubo> &cubos){
+    if (level == 1){
+        loadFirstMap(cubos);
+    }
+    if (level == 2){
+        loadSecondMap(cubos);
+        camera_position_c = glm::vec4(cubos[0].x, cubos[0].y + 30, cubos[0].z, 1.0f);
+    }
 }
 
 /// Sepa processa os Movimentos, desconfio pelo nome da funcao
@@ -2947,19 +2976,51 @@ void aplicaGravidade()
 
 }
 
+void testCheckPoint(int nearestCube,std::vector<Cubo> cubos){
+    if(level == 1 && nearestCube == 17){
+        endingPlatform = true;
+        level+=1;
+
+    }
+}
+
 ///Carrega posicoes dos cubos. Pode ser hardcoded ou vir a ser leitura de arquivo
-void loadCubesPositions(std::vector<Cubo> &cubos)
+void loadFirstMap(std::vector<Cubo> &cubos)
 {
 
-    cubos.push_back(Cubo(-1.5f, 0.6f, 0.0f, 4.0f, 4.0f, 4.0f,CUBE));
-    cubos.push_back(Cubo(4.0f, 1.2f, 0.0f, 4.0f, 4.0f, 4.0f,CUBE1));
-    cubos.push_back(Cubo(7.5f, 0.12f, -7.5f, 4.0f, 4.0f, 4.0f,CUBE2));
-    cubos.push_back(Cubo(14.0f, 0.16f, -20.5f, 4.0f, 4.0f, 12.0f,CUBE));
-    cubos.push_back(Cubo(3.5f, 0.9f, -16.5f, 1.9f, 2.0f, 5.0f,CUBE));
-    cubos.push_back(Cubo(7.5f, 0.9f, -20.5f, 5.0f, 5.0f, 1.9f,CUBE2));
-    cubos.push_back(Cubo(17.5f, 3.0f, -20.5f, 4.0f, 4.0f, 12.0f,CUBE2));
 
-    cubos.push_back(Cubo(0,0,0,1,1,1,CUBE)); // Cubo usado para criar plataforma
+
+    cubos.push_back(Cubo(0,0,0,10.0f,1.0f,10.0f,0));
+    cubos.push_back(Cubo(0.0f,0.0f,0.0f,10.0f,1.0f,10.0f,5));
+    cubos.push_back(Cubo(-40.5f, 0.0f, -1.5f, 60.9f, 2.0f, 15.0f,CUBE1));
+    cubos.push_back(Cubo(-105.5f, 1.0f, -1.5f, 60.9f, 2.0f, 15.0f,CUBE1));
+    cubos.push_back(Cubo(-170.5f, 1.8f, -1.5f, 60.9f, 2.0f, 15.0f,CUBE1));
+    cubos.push_back(Cubo(-235.5f, 2.6f, -1.5f, 60.9f, 2.0f, 15.0f,CUBE1));
+
+    cubos.push_back(Cubo(-280.5f, 3.1f, -1.5f, 19.9f, 2.0f, 5.0f,CUBE));
+    cubos.push_back(Cubo(-310.5f, 3.1f, 5.5f, 19.9f, 2.0f, 5.0f,CUBE));
+    cubos.push_back(Cubo(-334.5f, 3.1f, -4.5f, 19.9f, 2.0f, 5.0f,CUBE));
+
+    cubos.push_back(Cubo(-360.5f, 3.1f, 4.5f, 19.9f, 2.0f, 5.0f,CUBE));
+    cubos.push_back(Cubo(-395.5f, 2.1f, -2.5f, 19.9f, 2.0f, 5.0f,CUBE));
+    cubos.push_back(Cubo(-425.5f, 2.8f, 4.5f, 19.9f, 2.0f, 5.0f,CUBE));
+
+    cubos.push_back(Cubo(-458.5f, 3.5f, -1.5f, 19.9f, 2.0f, 5.0f,CUBE));
+    cubos.push_back(Cubo(-493.5f, 3.5f, 3.5f, 19.9f, 2.0f, 5.0f,CUBE));
+
+    cubos.push_back(Cubo(-509.5f, 3.5f, 21.5f, 5.0f, 2.0f, 19.9f,CUBE));
+    cubos.push_back(Cubo(-500.5f, 3.5f, 50.5f, 5.0f, 2.0f, 19.9f,CUBE));
+    cubos.push_back(Cubo(-518.5f, 3.5f, 69.5f, 5.0f, 2.0f, 19.9f,CUBE));
+
+    cubos.push_back(Cubo(-518.5f, 0.5f, 93.5f, 16.6f, 2.0f, 10.0f,CUBE2));
+
+}
+
+///Carrega posicoes dos cubos. Pode ser hardcoded ou vir a ser leitura de arquivo
+void loadSecondMap(std::vector<Cubo> &cubos)
+{
+    cubos.push_back(Cubo(-300.5f, 0.0f, -1.5f, 25.0f, 2.0f, 25.0f,CUBE1));
+
 }
 // set makeprg=cd\ ..\ &&\ make\ run\ >/dev/null
 // vim: set spell spelllang=pt_br :
