@@ -322,7 +322,7 @@ float novoX;
 float novoZ;
 glm::vec4 nextPosition;
 glm::vec4 camera_view_vector;
-float deslocamento = 1.0f;
+float deslocamento = 1.5f;
 bool charging = false;
 double chargeTime = 0.0f;
 bool arrowReplaced = true;
@@ -2954,7 +2954,7 @@ void aplicaGravidade()
 {
     if (JUMPING)
     {
-        camera_position_c.y +=  whileTime;
+        camera_position_c.y +=  1.2*whileTime;
         if(actualSecond - startJump > 3)
         {
             JUMPING = false;
@@ -2966,7 +2966,7 @@ void aplicaGravidade()
 
     else
     {
-        camera_position_c.y -=0.3*whileTime;
+        camera_position_c.y -=0.5*whileTime;
     }
 
 }
@@ -2982,8 +2982,6 @@ void testCheckPoint(int nearestCube,std::vector<Cubo> cubos){
 ///Carrega posicoes dos cubos. Pode ser hardcoded ou vir a ser leitura de arquivo
 void loadFirstMap(std::vector<Cubo> &cubos)
 {
-
-
 
     cubos.push_back(Cubo(0,0,0,10.0f,1.0f,10.0f,0));
     cubos.push_back(Cubo(0.0f,0.0f,0.0f,10.0f,1.0f,10.0f,5));
