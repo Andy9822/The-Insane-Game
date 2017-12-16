@@ -543,28 +543,31 @@ int main(int argc, char* argv[])
     glm::mat4 the_model;
     glm::mat4 the_view;
 
+
     while(true)
     {
+        engine->play2D("../../audio/menuSong.wav", true);
         int opMenu = menu();
         switch(opMenu)
         {
 
         case 0 :
+            engine->stopAllSounds();
+            engine->play2D("../../audio/initGame.wav", false);
             playGame();
             break;
 
         case 1:
-          optionsMenu();
-          break;
+            optionsMenu();
+            break;
 
         case 2:
+            engine->drop();
             return 0;
             break;
 
         default:
-          break;
-
-
+            break;
 
         }
     }
@@ -659,7 +662,6 @@ void generateFinalPlataform(vector<Cubo> *cubos, Cubo last)
 
 int menu()
 {
-    engine->play2D("../../audio/menuSong.wav", true);
     int selectionTime = 0;
 
     float startPos = -0.5f;
@@ -794,8 +796,6 @@ int menu()
         glfwPollEvents();
     }
 
-    engine->stopAllSounds();
-    engine->play2D("../../audio/initGame.wav", false);
     enterPressed = false;
     return selectPos;
 
@@ -804,7 +804,6 @@ int menu()
 
 void optionsMenu()
 {
-    engine->play2D("../../audio/menuSong.wav", true);
 
     while(!enterPressed){
 
@@ -1065,10 +1064,6 @@ void playGame()
         {
             waveCounter = -1;
             enemies.clear();
-            /*for(unsigned i = 2; i < cubos.size(); i++)
-            {
-                cubos.pop_back();
-            }*/
             reachedAnEnd = false;
             TextRendering_PrintString(window, "YOU DIED", -0.5f, 0.0f, 5.0f);
             TextRendering_PrintString(window, "Press enter to continue...", -0.5f, -0.5f, 1.0f);
@@ -1202,8 +1197,8 @@ void playGame()
                 updateEnemy(&enemies[i], camera_position_c, whileTime);
 
                 model = Matrix_Translate(enemies[i].pos.x, enemies[i].pos.y, enemies[i].pos.z)
-                        * Matrix_Rotate_Y(enemies[i].rotation_Y)
-                        * Matrix_Scale(enemies[i].scale.x, enemies[i].scale.y + enemies[i].Y_deviation, enemies[i].scale.z);
+                        * Matrix_Scale(enemies[i].scale.x, enemies[i].scale.y + enemies[i].Y_deviation, enemies[i].scale.z)
+                        * Matrix_Rotate_Y(enemies[i].rotation_Y);
                 glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
                 glUniform1i(object_id_uniform, enemyText + 15);
                 DrawVirtualObject(enemies[i].name.c_str());
@@ -1310,16 +1305,15 @@ void playGame()
                 for(unsigned e = 0; e < enemies.size(); e++)
                 {
                     model = Matrix_Translate(enemies[e].pos.x, enemies[e].pos.y, enemies[e].pos.z)
-                            // * Matrix_Rotate_Y(enemies[e].rotation_Y)  ver pq isso aqui faz não funcionar!
                             * Matrix_Scale(enemies[e].scale.x, enemies[e].scale.y + enemies[e].Y_deviation, enemies[e].scale.z);
-
+                           // * Matrix_Rotate_Y(enemies[e].rotation_Y);
                     glm::vec4 bbox_max = model * glm::vec4(g_VirtualScene[enemies[e].name].bbox_max.x, g_VirtualScene[enemies[e].name].bbox_max.y, g_VirtualScene[enemies[e].name].bbox_max.z, 1.0f);
                     glm::vec4 bbox_min = model * glm::vec4(g_VirtualScene[enemies[e].name].bbox_min.x, g_VirtualScene[enemies[e].name].bbox_min.y, g_VirtualScene[enemies[e].name].bbox_min.z, 1.0f);
 
                     if(isPointInsideBBOX(arrows[i].pos, bbox_min, bbox_max))
                     {
+                        engine->play2D("../../audio/dead.wav", false);
                         enemies.erase(enemies.begin() + e);
-
                         arrowCollides = true;
                     }
 
@@ -1401,6 +1395,7 @@ void playGame()
 
             if(areBBOXintersecting(youBBoxMin, youBBoxMax, bbox_min, bbox_max))
             {
+                engine->play2D("../../audio/escalama.wav", false);
                 camera_position_c.y = -1.0f; //kills you
             }
 

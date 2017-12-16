@@ -126,20 +126,20 @@ void main()
 
     case ARROWT:
         U = (position_model.x - minx)/(maxx - minx) ;
-        V = (position_model.y - miny)/(maxy - miny) ;
-
-        // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
-        Kd = texture(TextureImage0, vec2(U,V)).rgb;
-        Ka = vec3(0.1f,0.1f,0.1f);
-        Ks = vec3(0.1f,0.1f,0.1f);
+        V = (position_model.z - minz)/(maxz - minz) ;
+        Kd = texture(TextureImage7, vec2(U,V)).rgb;
+        Ks = vec3(0.0f,0.0f,0.0f);
+        Ka = Kd/2;
         q = 1;
         break;
 
     case ARROWP:
-        Kd = vec3(0.5f, 0.5f, 1.0f);
-        Ks = vec3(0.0f, 0.0f, 0.0f);
-        Ka = Kd / 2;
-        q = 1.0;
+        U = (position_model.x - minx)/(maxx - minx) ;
+        V = (position_model.y - miny)/(maxy - miny) ;
+        Kd = texture(TextureImage6, vec2(U,V)).rgb;
+        Ks = vec3(0.0f,0.0f,0.0f);
+        Ka = Kd/2;
+        q = 1;
         break;
 
     case ARM:

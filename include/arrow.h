@@ -12,6 +12,7 @@ struct Arrow {
 
     glm::vec4 pos;
     glm::vec4 speed;
+    glm::vec4 w;
     float thetaAngle;
     float phiAngle;
     ArrowType type;
@@ -20,8 +21,8 @@ struct Arrow {
         pos = initialPos;
         speed = 0.8f*speedI;
         thetaAngle = theta;
-        phiAngle = phi;
         type = normal;
+        phiAngle = phi;
     }
 
 };

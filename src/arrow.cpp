@@ -4,6 +4,31 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
+float norma(glm::vec4 v)
+{
+    float vx = v.x;
+    float vy = v.y;
+    float vz = v.z;
+
+    return sqrt( vx*vx + vy*vy + vz*vz );
+}
+
+glm::vec4 produtovetorial(glm::vec4 u, glm::vec4 v)
+{
+    float u1 = u.x;
+    float u2 = u.y;
+    float u3 = u.z;
+    float v1 = v.x;
+    float v2 = v.y;
+    float v3 = v.z;
+
+    return glm::vec4(
+        u2*v3 - u3*v2, // Primeiro coeficiente
+        u3*v1 - u1*v3, // Segundo coeficiente
+        u1*v2 - u2*v1, // Terceiro coeficiente
+        0.0f // w = 0 para vetores.
+    );
+}
 
 void updateArrow(Arrow *arrow, float timeElapsed){
 
