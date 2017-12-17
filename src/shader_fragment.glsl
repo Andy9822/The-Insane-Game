@@ -31,13 +31,14 @@ uniform mat4 projection;
 #define CUBE 9
 #define CUBE1 10
 #define CUBE2 11
-#define COW 12
-#define WALLPAPER 13
-#define MOON 14
-#define GHOST1 15
-#define GHOST2 16
-#define GHOST3 17
-#define GHOST4 18
+#define CUBE3 12
+#define COW 13
+#define WALLPAPER 14
+#define MOON 15
+#define GHOST1 16
+#define GHOST2 17
+#define GHOST3 18
+#define GHOST4 19
 
 
 uniform int object_id;
@@ -61,6 +62,7 @@ uniform sampler2D TextureImage10;
 uniform sampler2D TextureImage11;
 uniform sampler2D TextureImage12;
 uniform sampler2D TextureImage13;
+uniform sampler2D TextureImage14;
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec3 color;
@@ -302,6 +304,14 @@ void main()
         U = (position_model.x - minx)/(maxx - minx) ;
         V = (position_model.z - minz)/(maxz - minz) ;
         Kd = texture(TextureImage7, vec2(U,V)).rgb;
+        Ks = vec3(0.0f,0.0f,0.0f);
+        Ka = Kd/2;
+        q = 1;
+        break;
+    case CUBE3:
+        U = (position_model.x - minx)/(maxx - minx) ;
+        V = (position_model.z - minz)/(maxz - minz) ;
+        Kd = texture(TextureImage14, vec2(U,V)).rgb;
         Ks = vec3(0.0f,0.0f,0.0f);
         Ka = Kd/2;
         q = 1;
