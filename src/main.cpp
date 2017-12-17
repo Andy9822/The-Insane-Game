@@ -2929,7 +2929,7 @@ void testCheckPoint(int nearestCube,std::vector<Cubo> cubos){
 ///Carrega posicoes dos cubos.
 void loadFirstMap(std::vector<Cubo> &cubos)
 {
-
+    cubos.push_back(Cubo(0,0,0,10.0f,1.0f,10.0f,ARROWP));
     cubos.push_back(Cubo(0.0f,0.0f,0.0f,10.0f,1.0f,10.0f,ARROWP));
     cubos.push_back(Cubo(-40.5f, 0.0f, -1.5f, 60.9f, 2.0f, 15.0f,CUBE1));
     cubos.push_back(Cubo(-105.5f, 1.0f, -1.5f, 60.9f, 2.0f, 15.0f,CUBE1));
@@ -2958,6 +2958,7 @@ void loadFirstMap(std::vector<Cubo> &cubos)
 ///Carrega posicoes dos cubos.
 void loadSecondMap(std::vector<Cubo> &cubos)
 {
+
 
     cubos.push_back(Cubo(0.0f,0.0f,0.0f,10.0f,1.0f,10.0f,ARROWP));
     cubos.push_back(Cubo(-300.5f, 50.0f, -1.5f, 25.0f, 2.0f, 25.0f,CUBE1));
