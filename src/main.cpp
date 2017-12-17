@@ -665,7 +665,7 @@ void createRandomNextCube(vector<Cubo> *cubos, Cubo present, int color)
 void generateFinalPlataform(vector<Cubo> *cubos, Cubo last)
 {
 
-    cubos->push_back(Cubo(last.x, last.y, last.z + last.dz/2 + 100.0f,100.0f, 1.0f, 100.0f, 1));
+    cubos->push_back(Cubo(last.x, last.y, last.z + last.dz/2 + 50.0f,100.0f, 1.0f, 100.0f, 1));
 
 }
 
@@ -1213,7 +1213,7 @@ void playGame()
                         * Matrix_Scale(enemies[i].scale.x, enemies[i].scale.y + enemies[i].Y_deviation, enemies[i].scale.z)
                         * Matrix_Rotate_Y(enemies[i].rotation_Y);
                 glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-                glUniform1i(object_id_uniform, enemyText + 15);
+                glUniform1i(object_id_uniform, enemyText + 16);
                 DrawVirtualObject(enemies[i].name.c_str());
             }
 
