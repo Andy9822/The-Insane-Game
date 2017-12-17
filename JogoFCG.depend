@@ -2002,23 +2002,23 @@
 1512250672 source:c:\users\henrique & guilherme\desktop\the-insane-game\src\tiny_obj_loader.cpp
 	"tiny_obj_loader.h"
 
-1513543818 source:c:\users\henrique & guilherme\documents\the-insane-game\src\arrow.cpp
+1513550968 source:c:\users\henrique & guilherme\documents\the-insane-game\src\arrow.cpp
 	"arrow.h"
 	<glm/mat4x4.hpp>
 	<glm/vec4.hpp>
 	<glm/gtc/type_ptr.hpp>
 	<iostream>
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\arrow.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\arrow.h
 	<glm/mat4x4.hpp>
 	<glm/vec4.hpp>
 	<glm/gtc/type_ptr.hpp>
 	<iostream>
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\mat4x4.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\mat4x4.hpp
 	"detail/type_mat4x4.hpp"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat4x4.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat4x4.hpp
 	"../fwd.hpp"
 	"type_vec4.hpp"
 	"type_mat.hpp"
@@ -2026,23 +2026,23 @@
 	<cstddef>
 	"type_mat4x4.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\fwd.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\fwd.hpp
 	"detail/type_int.hpp"
 	"detail/type_float.hpp"
 	"detail/type_vec.hpp"
 	"detail/type_mat.hpp"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_int.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_int.hpp
 	"setup.hpp"
 	<type_traits>
 	<cstdint>
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\setup.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\setup.hpp
 	<cassert>
 	<cstddef>
 	"../simd/platform.h"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\simd\platform.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\simd\platform.h
 	<cuda.h>
 	<intrin.h>
 	<immintrin.h>
@@ -2054,40 +2054,40 @@
 	<pmmintrin.h>
 	<emmintrin.h>
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_float.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_float.hpp
 	"setup.hpp"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_vec.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_vec.hpp
 	"precision.hpp"
 	"type_int.hpp"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\precision.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\precision.hpp
 	"setup.hpp"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat.hpp
 	"precision.hpp"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_vec4.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_vec4.hpp
 	"type_vec.hpp"
 	"_swizzle.hpp"
 	"_swizzle_func.hpp"
 	<cstddef>
 	"type_vec4.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\_swizzle.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\_swizzle.hpp
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\_swizzle_func.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\_swizzle_func.hpp
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_vec4.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_vec4.inl
 	"type_vec4_simd.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_vec4_simd.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_vec4_simd.inl
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat4x4.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat4x4.inl
 	"func_matrix.hpp"
 	"type_mat4x4_simd.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_matrix.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_matrix.hpp
 	"../detail/precision.hpp"
 	"../detail/setup.hpp"
 	"../detail/type_mat.hpp"
@@ -2105,37 +2105,37 @@
 	"../mat4x4.hpp"
 	"func_matrix.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\vec2.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\vec2.hpp
 	"detail/type_vec2.hpp"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_vec2.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_vec2.hpp
 	"type_vec.hpp"
 	"_swizzle.hpp"
 	"_swizzle_func.hpp"
 	<cstddef>
 	"type_vec2.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_vec2.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_vec2.inl
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\vec3.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\vec3.hpp
 	"detail/type_vec3.hpp"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_vec3.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_vec3.hpp
 	"type_vec.hpp"
 	"_swizzle.hpp"
 	"_swizzle_func.hpp"
 	<cstddef>
 	"type_vec3.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_vec3.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_vec3.inl
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\vec4.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\vec4.hpp
 	"detail/type_vec4.hpp"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\mat2x2.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\mat2x2.hpp
 	"detail/type_mat2x2.hpp"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat2x2.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat2x2.hpp
 	"../fwd.hpp"
 	"type_vec2.hpp"
 	"type_mat.hpp"
@@ -2143,13 +2143,13 @@
 	<cstddef>
 	"type_mat2x2.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat2x2.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat2x2.inl
 	"func_matrix.hpp"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\mat2x3.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\mat2x3.hpp
 	"detail/type_mat2x3.hpp"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat2x3.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat2x3.hpp
 	"../fwd.hpp"
 	"type_vec2.hpp"
 	"type_vec3.hpp"
@@ -2158,12 +2158,12 @@
 	<cstddef>
 	"type_mat2x3.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat2x3.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat2x3.inl
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\mat2x4.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\mat2x4.hpp
 	"detail/type_mat2x4.hpp"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat2x4.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat2x4.hpp
 	"../fwd.hpp"
 	"type_vec2.hpp"
 	"type_vec4.hpp"
@@ -2172,12 +2172,12 @@
 	<cstddef>
 	"type_mat2x4.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat2x4.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat2x4.inl
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\mat3x2.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\mat3x2.hpp
 	"detail/type_mat3x2.hpp"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat3x2.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat3x2.hpp
 	"../fwd.hpp"
 	"type_vec2.hpp"
 	"type_vec3.hpp"
@@ -2186,12 +2186,12 @@
 	<cstddef>
 	"type_mat3x2.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat3x2.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat3x2.inl
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\mat3x3.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\mat3x3.hpp
 	"detail/type_mat3x3.hpp"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat3x3.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat3x3.hpp
 	"../fwd.hpp"
 	"type_vec3.hpp"
 	"type_mat.hpp"
@@ -2199,13 +2199,13 @@
 	<cstddef>
 	"type_mat3x3.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat3x3.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat3x3.inl
 	"func_matrix.hpp"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\mat3x4.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\mat3x4.hpp
 	"detail/type_mat3x4.hpp"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat3x4.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat3x4.hpp
 	"../fwd.hpp"
 	"type_vec3.hpp"
 	"type_vec4.hpp"
@@ -2214,12 +2214,12 @@
 	<cstddef>
 	"type_mat3x4.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat3x4.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat3x4.inl
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\mat4x2.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\mat4x2.hpp
 	"detail/type_mat4x2.hpp"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat4x2.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat4x2.hpp
 	"../fwd.hpp"
 	"type_vec2.hpp"
 	"type_vec4.hpp"
@@ -2228,12 +2228,12 @@
 	<cstddef>
 	"type_mat4x2.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat4x2.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat4x2.inl
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\mat4x3.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\mat4x3.hpp
 	"detail/type_mat4x3.hpp"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat4x3.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat4x3.hpp
 	"../fwd.hpp"
 	"type_vec3.hpp"
 	"type_vec4.hpp"
@@ -2242,21 +2242,21 @@
 	<cstddef>
 	"type_mat4x3.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat4x3.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat4x3.inl
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_matrix.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_matrix.inl
 	"../geometric.hpp"
 	<limits>
 	"func_matrix_simd.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\geometric.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\geometric.hpp
 	"detail/func_geometric.hpp"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_geometric.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_geometric.hpp
 	"type_vec3.hpp"
 	"func_geometric.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_geometric.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_geometric.inl
 	"func_exponential.hpp"
 	"func_common.hpp"
 	"type_vec2.hpp"
@@ -2264,7 +2264,7 @@
 	"type_float.hpp"
 	"func_geometric_simd.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_exponential.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_exponential.hpp
 	"type_vec1.hpp"
 	"type_vec2.hpp"
 	"type_vec3.hpp"
@@ -2272,7 +2272,7 @@
 	<cmath>
 	"func_exponential.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_vec1.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_vec1.hpp
 	"../fwd.hpp"
 	"type_vec.hpp"
 	"_swizzle.hpp"
@@ -2280,9 +2280,9 @@
 	<cstddef>
 	"type_vec1.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_vec1.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_vec1.inl
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_exponential.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_exponential.inl
 	"func_vector_relational.hpp"
 	"_vectorize.hpp"
 	<limits>
@@ -2290,40 +2290,40 @@
 	<cassert>
 	"func_exponential_simd.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_vector_relational.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_vector_relational.hpp
 	"precision.hpp"
 	"setup.hpp"
 	"func_vector_relational.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_vector_relational.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_vector_relational.inl
 	<limits>
 	"func_vector_relational_simd.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_vector_relational_simd.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_vector_relational_simd.inl
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\_vectorize.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\_vectorize.hpp
 	"type_vec1.hpp"
 	"type_vec2.hpp"
 	"type_vec3.hpp"
 	"type_vec4.hpp"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_exponential_simd.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_exponential_simd.inl
 	"../simd/exponential.h"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\simd\exponential.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\simd\exponential.h
 	"platform.h"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_common.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_common.hpp
 	"setup.hpp"
 	"precision.hpp"
 	"type_int.hpp"
 	"_fixes.hpp"
 	"func_common.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\_fixes.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\_fixes.hpp
 	<cmath>
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_common.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_common.inl
 	"func_vector_relational.hpp"
 	"type_vec2.hpp"
 	"type_vec3.hpp"
@@ -2332,30 +2332,30 @@
 	<limits>
 	"func_common_simd.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_common_simd.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_common_simd.inl
 	"../simd/common.h"
 	<immintrin.h>
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\simd\common.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\simd\common.h
 	"platform.h"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_geometric_simd.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_geometric_simd.inl
 	"../simd/geometric.h"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\simd\geometric.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\simd\geometric.h
 	"common.h"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_matrix_simd.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_matrix_simd.inl
 	"type_mat4x4.hpp"
 	"func_geometric.hpp"
 	"../simd/matrix.h"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\simd\matrix.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\simd\matrix.h
 	"geometric.h"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat4x4_simd.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\type_mat4x4_simd.inl
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\gtc\type_ptr.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\gtc\type_ptr.hpp
 	"../gtc/quaternion.hpp"
 	"../vec2.hpp"
 	"../vec3.hpp"
@@ -2372,7 +2372,7 @@
 	<cstring>
 	"type_ptr.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\gtc\quaternion.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\gtc\quaternion.hpp
 	"../mat3x3.hpp"
 	"../mat4x4.hpp"
 	"../vec3.hpp"
@@ -2380,54 +2380,54 @@
 	"../gtc/constants.hpp"
 	"quaternion.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\gtc\constants.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\gtc\constants.hpp
 	"../detail/setup.hpp"
 	"constants.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\gtc\constants.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\gtc\constants.inl
 	<limits>
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\gtc\quaternion.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\gtc\quaternion.inl
 	"../trigonometric.hpp"
 	"../geometric.hpp"
 	"../exponential.hpp"
 	<limits>
 	"quaternion_simd.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\trigonometric.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\trigonometric.hpp
 	"detail/func_trigonometric.hpp"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_trigonometric.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_trigonometric.hpp
 	"setup.hpp"
 	"precision.hpp"
 	"func_trigonometric.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_trigonometric.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_trigonometric.inl
 	"_vectorize.hpp"
 	<cmath>
 	<limits>
 	"func_trigonometric_simd.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_trigonometric_simd.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\detail\func_trigonometric_simd.inl
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\exponential.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\exponential.hpp
 	"detail/func_exponential.hpp"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\gtc\quaternion_simd.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\gtc\quaternion_simd.inl
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\gtc\type_ptr.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\gtc\type_ptr.inl
 	<cstring>
 
-1513543818 source:c:\users\henrique & guilherme\documents\the-insane-game\src\collision.cpp
+1513550968 source:c:\users\henrique & guilherme\documents\the-insane-game\src\collision.cpp
 	"collision.hpp"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\collision.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\collision.hpp
 	<glm/mat4x4.hpp>
 	<glm/vec4.hpp>
 	<glm/gtc/type_ptr.hpp>
 	<iostream>
 
-1513543818 source:c:\users\henrique & guilherme\documents\the-insane-game\src\glad.c
+1513550968 source:c:\users\henrique & guilherme\documents\the-insane-game\src\glad.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
@@ -2435,7 +2435,7 @@
 	<windows.h>
 	<dlfcn.h>
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glad\glad.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glad\glad.h
 	<windows.h>
 	<stddef.h>
 	<KHR/khrplatform.h>
@@ -2446,13 +2446,13 @@
 	<stdint.h>
 	<inttypes.h>
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\khr\khrplatform.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\khr\khrplatform.h
 	<sys/cdefs.h>
 	<stdint.h>
 	<inttypes.h>
 	<stdint.h>
 
-1513544686 source:c:\users\henrique & guilherme\documents\the-insane-game\src\main.cpp
+1513551095 source:c:\users\henrique & guilherme\documents\the-insane-game\src\main.cpp
 	<cmath>
 	<cstdio>
 	<cstdlib>
@@ -2482,7 +2482,7 @@
 	"enemy.h"
 	"collision.hpp"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glfw\glfw3.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glfw\glfw3.h
 	<stddef.h>
 	<stdint.h>
 	<OpenGL/gl3.h>
@@ -2503,7 +2503,7 @@
 	<GL/glext.h>
 	<GL/glu.h>
 
-1513543818 c:\users\henrique & guilherme\documents\the-insane-game\include\tiny_obj_loader.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\tiny_obj_loader.h
 	<map>
 	<string>
 	<vector>
@@ -2517,7 +2517,7 @@
 	<fstream>
 	<sstream>
 
-1513543818 c:\users\henrique & guilherme\documents\the-insane-game\include\stb_image.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\stb_image.h
 	"stb_image.h"
 	<stdio.h>
 	<stdarg.h>
@@ -2533,7 +2533,7 @@
 	<intrin.h>
 	<arm_neon.h>
 
-1513543818 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\irrklang.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\irrklang.h
 	"ik_irrKlangTypes.h"
 	"ik_vec3d.h"
 	"ik_IRefCounted.h"
@@ -2555,29 +2555,29 @@
 	"ik_IAudioRecorder.h"
 	"ik_ISoundMixedOutputReceiver.h"
 
-1513543818 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_irrklangtypes.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_irrklangtypes.h
 	<wchar.h>
 
-1513543818 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_vec3d.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_vec3d.h
 	<math.h>
 	"ik_irrKlangTypes.h"
 
-1513543818 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_irefcounted.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_irefcounted.h
 	"ik_irrKlangTypes.h"
 
-1513543818 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_ivirtualrefcounted.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_ivirtualrefcounted.h
 	"ik_irrKlangTypes.h"
 
-1513543818 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_esoundoutputdrivers.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_esoundoutputdrivers.h
 
-1513543818 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_esoundengineoptions.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_esoundengineoptions.h
 
-1513543818 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_estreammodes.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_estreammodes.h
 
-1513543818 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_saudiostreamformat.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_saudiostreamformat.h
 	"ik_IRefCounted.h"
 
-1513543818 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_isoundengine.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_isoundengine.h
 	"ik_IRefCounted.h"
 	"ik_vec3d.h"
 	"ik_ISoundSource.h"
@@ -2586,61 +2586,61 @@
 	"ik_IFileFactory.h"
 	"ik_ISoundMixedOutputReceiver.h"
 
-1513543818 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_isoundsource.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_isoundsource.h
 	"ik_IVirtualRefCounted.h"
 	"ik_vec3d.h"
 	"ik_EStreamModes.h"
 	"ik_SAudioStreamFormat.h"
 
-1513543818 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_isound.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_isound.h
 	"ik_IVirtualRefCounted.h"
 	"ik_ISoundEffectControl.h"
 	"ik_vec3d.h"
 
-1513543818 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_isoundeffectcontrol.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_isoundeffectcontrol.h
 	"ik_IVirtualRefCounted.h"
 	"ik_vec3d.h"
 
-1513543818 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_ifilefactory.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_ifilefactory.h
 	"ik_IRefCounted.h"
 
-1513543818 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_isoundmixedoutputreceiver.h
-	"ik_IRefCounted.h"
-	"ik_SAudioStreamFormat.h"
-
-1513543818 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_iaudiostream.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_isoundmixedoutputreceiver.h
 	"ik_IRefCounted.h"
 	"ik_SAudioStreamFormat.h"
 
-1513543818 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_iaudiostreamloader.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_iaudiostream.h
+	"ik_IRefCounted.h"
+	"ik_SAudioStreamFormat.h"
+
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_iaudiostreamloader.h
 	"ik_IRefCounted.h"
 	"ik_IFileReader.h"
 
-1513543818 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_ifilereader.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_ifilereader.h
 	"ik_IRefCounted.h"
 
-1513543818 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_isoundstopeventreceiver.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_isoundstopeventreceiver.h
 	"ik_IRefCounted.h"
 	"ik_SAudioStreamFormat.h"
 
-1513543818 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_isounddevicelist.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_isounddevicelist.h
 	"ik_IRefCounted.h"
 
-1513543818 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_iaudiorecorder.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\irrklang-1.5.0\include\ik_iaudiorecorder.h
 	"ik_IRefCounted.h"
 	"ik_ISoundSource.h"
 
-1513543818 c:\users\henrique & guilherme\documents\the-insane-game\include\utils.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\utils.h
 	<cstdio>
 
-1513543818 c:\users\henrique & guilherme\documents\the-insane-game\include\matrices.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\matrices.h
 	<cstdio>
 	<cstdlib>
 	<glm/mat4x4.hpp>
 	<glm/vec4.hpp>
 	<glm/gtc/matrix_transform.hpp>
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\gtc\matrix_transform.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\gtc\matrix_transform.hpp
 	"../mat4x4.hpp"
 	"../vec2.hpp"
 	"../vec3.hpp"
@@ -2648,18 +2648,18 @@
 	"../gtc/constants.hpp"
 	"matrix_transform.inl"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\gtc\matrix_transform.inl
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\gtc\matrix_transform.inl
 	"../geometric.hpp"
 	"../trigonometric.hpp"
 	"../matrix.hpp"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\matrix.hpp
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\glm\matrix.hpp
 	"detail/func_matrix.hpp"
 
-1513543818 source:c:\users\henrique & guilherme\documents\the-insane-game\src\stb_image.cpp
+1513550968 source:c:\users\henrique & guilherme\documents\the-insane-game\src\stb_image.cpp
 	"stb_image.h"
 
-1513543818 source:c:\users\henrique & guilherme\documents\the-insane-game\src\textrendering.cpp
+1513550968 source:c:\users\henrique & guilherme\documents\the-insane-game\src\textrendering.cpp
 	<string>
 	<glad/glad.h>
 	<GLFW/glfw3.h>
@@ -2668,11 +2668,11 @@
 	"utils.h"
 	"dejavufont.h"
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\dejavufont.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\dejavufont.h
 	<stddef.h>
 	<stdint.h>
 
-1513543818 source:c:\users\henrique & guilherme\documents\the-insane-game\src\tiny_obj_loader.cpp
+1513550968 source:c:\users\henrique & guilherme\documents\the-insane-game\src\tiny_obj_loader.cpp
 	"tiny_obj_loader.h"
 
 1512739426 source:c:\users\andy\desktop\fcg\animacoes mov bugado\src\arrow.cpp
@@ -3356,12 +3356,12 @@
 	<glm/vec4.hpp>
 	<cmath>
 
-1513543818 source:c:\users\henrique & guilherme\documents\the-insane-game\src\enemy.cpp
+1513550968 source:c:\users\henrique & guilherme\documents\the-insane-game\src\enemy.cpp
 	"enemy.h"
 	<glm/vec4.hpp>
 	<cmath>
 
-1513543817 c:\users\henrique & guilherme\documents\the-insane-game\include\enemy.h
+1513550968 c:\users\henrique & guilherme\documents\the-insane-game\include\enemy.h
 	<glm/vec4.hpp>
 	<glm/gtc/type_ptr.hpp>
 	<string>

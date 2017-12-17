@@ -2930,8 +2930,7 @@ void testCheckPoint(int nearestCube,std::vector<Cubo> cubos){
 void loadFirstMap(std::vector<Cubo> &cubos)
 {
 
-    cubos.push_back(Cubo(0,0,0,10.0f,1.0f,10.0f,0));
-    cubos.push_back(Cubo(0.0f,0.0f,0.0f,10.0f,1.0f,10.0f,5));
+    cubos.push_back(Cubo(0.0f,0.0f,0.0f,10.0f,1.0f,10.0f,ARROWP));
     cubos.push_back(Cubo(-40.5f, 0.0f, -1.5f, 60.9f, 2.0f, 15.0f,CUBE1));
     cubos.push_back(Cubo(-105.5f, 1.0f, -1.5f, 60.9f, 2.0f, 15.0f,CUBE1));
     cubos.push_back(Cubo(-170.5f, 1.8f, -1.5f, 60.9f, 2.0f, 15.0f,CUBE1));
@@ -2960,7 +2959,7 @@ void loadFirstMap(std::vector<Cubo> &cubos)
 void loadSecondMap(std::vector<Cubo> &cubos)
 {
 
-    cubos.push_back(Cubo(0.0f,0.0f,0.0f,10.0f,1.0f,10.0f,5));
+    cubos.push_back(Cubo(0.0f,0.0f,0.0f,10.0f,1.0f,10.0f,ARROWP));
     cubos.push_back(Cubo(-300.5f, 50.0f, -1.5f, 25.0f, 2.0f, 25.0f,CUBE1));
 
     cubos.push_back(Cubo(-300.5f, 50.0f, 25.5f, 17.5f, 2.0f, 5.0f,CUBE1));
@@ -2992,7 +2991,7 @@ void loadSecondMap(std::vector<Cubo> &cubos)
 }
 ///Carrega posicoes dos cubos.
 void loadThirdMap(std::vector<Cubo> &cubos){
-    cubos.push_back(Cubo(0.0f,0.0f,0.0f,10.0f,1.0f,10.0f,5));
+    cubos.push_back(Cubo(0.0f,0.0f,0.0f,10.0f,1.0f,10.0f,ARROWP));
     cubos.push_back(Cubo(-100.5f, 45.0f, -1.5f, 25.0f, 2.0f, 25.0f,CUBE1));
 
     cubos.push_back(Cubo(-160.5f, 45.0f, -1.5f, 15.0f, 2.0f, 15.0f,CUBE2));
@@ -3018,7 +3017,7 @@ void loadThirdMap(std::vector<Cubo> &cubos){
 }
 ///Carrega posicoes dos cubos.
 void loadFourthMap(std::vector<Cubo> &cubos){
-    cubos.push_back(Cubo(0.0f,0.0f,0.0f,10.0f,1.0f,10.0f,5));
+    cubos.push_back(Cubo(0.0f,0.0f,0.0f,10.0f,1.0f,10.0f,ARROWP));
     cubos.push_back(Cubo(-255.5f, 50.0f, 200.5f, 40.9f, 2.0f, 45.0f,CUBE1));
 }
 
