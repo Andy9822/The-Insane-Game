@@ -33,9 +33,11 @@
 					<Add option="-O2" />
 					<Add option="-Wall" />
 					<Add option="-std=c++11" />
+					<Add directory="include/irrKlang-1.5.0/include" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+					<Add library="include/irrKlang-1.5.0/lib/Win32-gcc/libirrKlang.a" />
 				</Linker>
 			</Target>
 			<Target title="Linux">
