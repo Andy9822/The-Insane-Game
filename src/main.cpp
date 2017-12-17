@@ -80,13 +80,14 @@
 #define CUBE 9
 #define CUBE1 10
 #define CUBE2 11
-#define COW 12
-#define WALLPAPER 13
-#define MOON 14
-#define GHOST1 15
-#define GHOST2 16
-#define GHOST3 17
-#define GHOST4 18
+#define CUBE3 12
+#define COW 13
+#define WALLPAPER 14
+#define MOON 15
+#define GHOST1 16
+#define GHOST2 17
+#define GHOST3 18
+#define GHOST4 19
 
 using namespace std;
 // Estrutura que representa um modelo geométrico carregado a partir de um
@@ -203,7 +204,7 @@ void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 void drawBackground(glm::vec4 &wallpaperPos);
 void draw3Enemies(glm::vec3 cubeCenter, float cubeHeight, float cubeRadius);
 void draw5Enemies(glm::vec3 cubeCenter, float cubeHeight, float cubeRadius);
-void createEnemies(int numEnemies, std::vector<Enemy>* enemies, Cubo referenceCube);
+void createEnemies(int numEnemies, std::vector<Enemy>* enemies, std::vector<Cubo> cubos);
 void createRandomNextCube(vector<Cubo> *cubos, Cubo present);
 void generateFinalPlataform(vector<Cubo> *cubos, Cubo last);
 
@@ -227,6 +228,9 @@ ArrowType selectArrowType();
 void handleTeleport(float * novoX,float * novoZ,std::vector<Cubo> cubos, glm::vec4 teleportPos);
 void loadFirstMap(std::vector<Cubo> &cubos);
 void loadSecondMap(std::vector<Cubo> &cubos);
+void loadThirdMap(std::vector<Cubo> &cubos);
+void loadFourthMap(std::vector<Cubo> &cubos);
+int getLevelEnemies(int waveCounter);
 void printDialog(std::vector<std::string> dialog, double time, double startTime);
 
 
@@ -438,13 +442,15 @@ int main(int argc, char* argv[])
 
     LoadTextureImage("../../data/cube/hazard.jpg");      // TextureImage5
     LoadTextureImage("../../data/cube/bloc.jpg");      // TextureImage6
-    LoadTextureImage("../../data/cube/box222.jpg");      // TextureImage7
+    LoadTextureImage("../../data/cube/box2.jpg");      // TextureImage7
     LoadTextureImage("../../data/ghost/normalMap.png");      // TextureImage8
     LoadTextureImage("../../data/space.jpg");      // TextureImage9
     LoadTextureImage("../../data/ghost/ghostText.png");      // TextureImage10
     LoadTextureImage("../../data/ghost/ghostTextBlue.jpg");      // TextureImage11
     LoadTextureImage("../../data/ghost/ghostTextBlack.jpg");      // TextureImage12
     LoadTextureImage("../../data/ghost/ghostTextSaturated.jpg");      // TextureImage13
+    LoadTextureImage("../../data/cube/oie.png");      // TextureImage14
+
 
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
@@ -594,11 +600,13 @@ void printDialog(vector<std::string> dialog, double time, double startTime)
 
 }
 
-void createEnemies(int numEnemies, std::vector<Enemy>* enemies, Cubo referenceCube)
+void createEnemies(int numEnemies, std::vector<Enemy>* enemies, std::vector<Cubo> cubos)
 {
 
-    srand(time(NULL));
 
+    srand(time(NULL));
+    int maxIndex = cubos.size() - 1;
+    int randomicCube;
     float randomx;
     float diffx;
     float rx;
@@ -608,6 +616,7 @@ void createEnemies(int numEnemies, std::vector<Enemy>* enemies, Cubo referenceCu
 
     for(int i = 0; i < numEnemies; i++)
     {
+        randomicCube = rand() % maxIndex + 1;
         randomx = ((float) rand()) / (float) RAND_MAX;
         diffx = 100.0f;
         rx = randomx * diffx;
@@ -622,7 +631,7 @@ void createEnemies(int numEnemies, std::vector<Enemy>* enemies, Cubo referenceCu
         {
             rz = -rz;
         }
-        enemies->push_back(Enemy(glm::vec4(referenceCube.x + rx, referenceCube.y + 30.0f, referenceCube.z + rz, 1.0f), false, "ghost"));
+        enemies->push_back(Enemy(glm::vec4(cubos[randomicCube].x + rx, cubos[randomicCube].y + 30.0f, cubos[randomicCube].z + rz, 1.0f), false, "ghost"));
     }
 }
 
@@ -887,7 +896,7 @@ void playGame()
     double endBegin1 = 0;
     double endBegin2 = 0;
     int waveCounter = -1;
-    int waveCounterLimit = 2;
+    int waveCounterLimit = 4;
     bool reachedAnEnd = false;
     int stretchCount = 0;
     double stretchController = glfwGetTime();
@@ -1146,11 +1155,15 @@ void playGame()
 
             if(!reachedAnEnd)
             {
-                if(waveCounter == waveCounterLimit )
+
+                ///FINALIZAR
+                if(waveCounter == waveCounterLimit && level == 4 )
                 {
                     reachedAnEnd = true;
                     waveCounter = waveCounterLimit;
+                    //TODO
                     generateFinalPlataform(&cubos, cubos[cubos.size()-1]);
+
                 }
                 else
                 {
@@ -1164,7 +1177,7 @@ void playGame()
                             endingPlatform = false;
                         }
 
-                        createEnemies(cubos.size(), &enemies, cubos[cubos.size()-1]);
+                        createEnemies(getLevelEnemies(waveCounter), &enemies,cubos);
                         waveCounter++;
                         enemyText++;
                         cubeText++;
@@ -1646,6 +1659,7 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(program_id, "TextureImage11"), 11);
     glUniform1i(glGetUniformLocation(program_id, "TextureImage12"), 12);
     glUniform1i(glGetUniformLocation(program_id, "TextureImage13"), 13);
+    glUniform1i(glGetUniformLocation(program_id, "TextureImage14"), 14);
     glUseProgram(0);
 }
 
@@ -2637,8 +2651,6 @@ void PrintObjModelInfo(ObjModel* model)
 void resetLife(float *novoX,float *novoZ,std::vector<Cubo> &cubos)
 {
 
-    //camera_position_c = glm::vec4(cubos[1].x, cubos[1].y + cubos[1].dy/2 + ALTURAHERO, cubos[1].z, 1.0f);
-    camera_position_c = glm::vec4(cubos[16].x, cubos[16].y + cubos[16].dy/2 + ALTURAHERO, cubos[16].z, 1.0f);
     CAINDO = false;
     *novoX = camera_position_c.x;
     *novoZ = camera_position_c.z;
@@ -2856,11 +2868,25 @@ bool processaPouso(float antigoY,float cuboY,float cuboDY,float correcao)
 
 void loadLevelPlatforms(std::vector<Cubo> &cubos){
     if (level == 1){
+        //camera_position_c = glm::vec4(cubos[16].x, cubos[16].y + cubos[16].dy/2 + ALTURAHERO, cubos[16].z, 1.0f);
+        camera_position_c = glm::vec4(cubos[1].x, cubos[1].y + cubos[1].dy/2 + ALTURAHERO, cubos[1].z, 1.0f);
         loadFirstMap(cubos);
     }
     if (level == 2){
         loadSecondMap(cubos);
-        camera_position_c = glm::vec4(cubos[0].x, cubos[0].y + 30, cubos[0].z, 1.0f);
+        camera_position_c = glm::vec4(cubos[1].x , cubos[1].y + 30, cubos[1].z - 15, 1.0f);
+        //camera_position_c = glm::vec4(cubos[18].x, cubos[18].y + cubos[18].dy/2 + ALTURAHERO, cubos[18].z, 1.0f);
+    }
+
+    if(level == 3){
+        loadThirdMap(cubos);
+        camera_position_c = glm::vec4(cubos[1].x , cubos[1].y + 30, cubos[1].z - 15, 1.0f);
+        //camera_position_c = glm::vec4(cubos[18].x, cubos[18].y + 30, cubos[18].z, 1.0f);
+    }
+
+    if(level == 4){
+        loadFourthMap(cubos);
+        camera_position_c = glm::vec4(cubos[1].x, cubos[1].y + 30, cubos[1].z, 1.0f);
     }
 }
 
@@ -2977,6 +3003,18 @@ void testCheckPoint(int nearestCube,std::vector<Cubo> cubos){
         level+=1;
 
     }
+
+    if(level == 2 && nearestCube == 21 ){
+        cout << "entrei 2 " << endl;
+        endingPlatform = true;
+        level+=1;
+    }
+
+    if(level == 3 && nearestCube == 19){
+        cout << "yay"<< endl;
+        endingPlatform = true;
+        level+=1;
+    }
 }
 
 ///Carrega posicoes dos cubos. Pode ser hardcoded ou vir a ser leitura de arquivo
@@ -3005,16 +3043,97 @@ void loadFirstMap(std::vector<Cubo> &cubos)
     cubos.push_back(Cubo(-500.5f, 3.5f, 50.5f, 5.0f, 2.0f, 19.9f,CUBE));
     cubos.push_back(Cubo(-518.5f, 3.5f, 69.5f, 5.0f, 2.0f, 19.9f,CUBE));
 
-    cubos.push_back(Cubo(-518.5f, 0.5f, 93.5f, 16.6f, 2.0f, 10.0f,CUBE2));
+    cubos.push_back(Cubo(-518.5f, 0.5f, 93.5f, 16.6f, 2.0f, 10.0f,CUBE3));
 
 }
 
 ///Carrega posicoes dos cubos. Pode ser hardcoded ou vir a ser leitura de arquivo
 void loadSecondMap(std::vector<Cubo> &cubos)
 {
-    cubos.push_back(Cubo(-300.5f, 0.0f, -1.5f, 25.0f, 2.0f, 25.0f,CUBE1));
+
+    cubos.push_back(Cubo(0.0f,0.0f,0.0f,10.0f,1.0f,10.0f,5));
+    cubos.push_back(Cubo(-300.5f, 50.0f, -1.5f, 25.0f, 2.0f, 25.0f,CUBE1));
+
+    cubos.push_back(Cubo(-300.5f, 50.0f, 25.5f, 17.5f, 2.0f, 5.0f,CUBE1));
+    cubos.push_back(Cubo(-300.5f, 51.4f, 40.5f, 17.5f, 2.0f, 5.0f,CUBE1));
+    cubos.push_back(Cubo(-300.5f, 52.8f, 55.5f, 17.5f, 2.0f, 5.0f,CUBE1));
+    cubos.push_back(Cubo(-300.5f, 54.2f, 70.5f, 17.5f, 2.0f, 5.0f,CUBE1));
+    cubos.push_back(Cubo(-300.5f, 55.6f, 85.5f, 17.5f, 2.0f, 5.0f,CUBE1));
+    cubos.push_back(Cubo(-300.5f, 57.0f, 110.5f, 17.5f, 2.0f, 30.0f,CUBE1));
+
+
+    cubos.push_back(Cubo(-306.5f, 58.5f, 130.5f, 2.5f, 5.0f, 2.0f,CUBE));
+    cubos.push_back(Cubo(-308.5f, 60.0f, 140.5f, 2.5f, 5.0f, 2.0f,CUBE));
+    cubos.push_back(Cubo(-308.5f, 62.0f, 149.5f, 2.5f, 5.0f, 2.0f,CUBE));
+    cubos.push_back(Cubo(-300.5f, 64.0f, 146.5f, 2.5f, 5.0f, 2.0f,CUBE));
+    cubos.push_back(Cubo(-294.5f, 66.0f, 138.5f, 2.5f, 5.0f, 2.0f,CUBE));
+    cubos.push_back(Cubo(-290.5f, 68.0f, 130.5f, 2.5f, 5.0f, 2.0f,CUBE));
+    cubos.push_back(Cubo(-300.5f, 70.0f, 130.5f, 2.5f, 5.0f, 2.0f,CUBE));
+    cubos.push_back(Cubo(-300.5f, 72.0f, 140.5f, 2.5f, 5.0f, 2.0f,CUBE));
+    cubos.push_back(Cubo(-300.5f, 74.0f, 152.5f, 2.5f, 5.0f, 2.0f,CUBE));
+
+    cubos.push_back(Cubo(-300.5f, 75.4f, 170.5f, 17.5f, 2.0f, 25.0f,CUBE1));
+    cubos.push_back(Cubo(-300.5f, 75.4f, 220.5f, 17.5f, 2.0f, 25.0f,CUBE1));
+    cubos.push_back(Cubo(-330.5f, 75.4f, 195.5f, 17.5f, 2.0f, 25.0f,CUBE1));
+    cubos.push_back(Cubo(-270.5f, 75.4f, 195.5f, 17.5f, 2.0f, 25.0f,CUBE1));
+
+    cubos.push_back(Cubo(-300.5f, 60.5f, 195.5f, 16.6f, 2.0f, 10.0f,CUBE3));
+
 
 }
+
+void loadThirdMap(std::vector<Cubo> &cubos){
+    cubos.push_back(Cubo(0.0f,0.0f,0.0f,10.0f,1.0f,10.0f,5));
+    cubos.push_back(Cubo(-100.5f, 45.0f, -1.5f, 25.0f, 2.0f, 25.0f,CUBE1));
+
+    cubos.push_back(Cubo(-160.5f, 45.0f, -1.5f, 15.0f, 2.0f, 15.0f,CUBE2));
+    cubos.push_back(Cubo(-200.5f, 45.0f, 15.5f, 8.0f, 2.0f, 8.0f,CUBE2));
+    cubos.push_back(Cubo(-240.5f, 45.0f, -25.5f, 8.0f, 2.0f, 8.0f,CUBE2));
+    cubos.push_back(Cubo(-270.5f, 45.0f, 30.5f, 8.0f, 2.0f, 8.0f,CUBE2));
+    cubos.push_back(Cubo(-270.5f, 50.0f, 60.5f, 8.0f, 2.0f, 8.0f,CUBE2));
+    cubos.push_back(Cubo(-230.5f, 52.0f, 80.5f, 8.0f, 2.0f, 8.0f,CUBE2));
+    cubos.push_back(Cubo(-190.5f, 56.0f, 125.5f, 8.0f, 2.0f, 8.0f,CUBE2));
+    cubos.push_back(Cubo(-180.5f, 60.0f, 195.5f, 8.0f, 2.0f, 8.0f,CUBE2));
+    cubos.push_back(Cubo(-150.5f, 60.0f, 240.5f, 8.0f, 2.0f, 8.0f,CUBE2));
+    cubos.push_back(Cubo(-110.5f, 60.0f, 260.5f, 8.0f, 2.0f, 8.0f,CUBE2));
+    cubos.push_back(Cubo(-150.5f, 60.0f, 325.5f, 8.0f, 2.0f, 8.0f,CUBE2));
+    cubos.push_back(Cubo(-180.5f, 60.0f, 365.5f, 8.0f, 2.0f, 8.0f,CUBE2));
+    cubos.push_back(Cubo(-250.5f, 60.0f, 420.5f, 8.0f, 2.0f, 8.0f,CUBE2));
+
+    cubos.push_back(Cubo(-380.5f, 60.0f, 420.5f, 8.0f, 2.0f, 8.0f,CUBE2));
+    cubos.push_back(Cubo(-410.5f, 60.0f, 420.5f, 8.0f, 2.0f, 8.0f,CUBE2));
+    cubos.push_back(Cubo(-395.5f, 60.0f, 390.5f, 8.0f, 2.0f, 8.0f,CUBE2));
+    cubos.push_back(Cubo(-395.5f, 60.0f, 450.5f, 8.0f, 2.0f, 8.0f,CUBE2));
+
+    cubos.push_back(Cubo(-395.5f, 45.0f, 420.5f, 8.0f, 2.0f, 8.0f,CUBE3));
+}
+
+void loadFourthMap(std::vector<Cubo> &cubos){
+    cubos.push_back(Cubo(0.0f,0.0f,0.0f,10.0f,1.0f,10.0f,5));
+    cubos.push_back(Cubo(-255.5f, 50.0f, 200.5f, 40.9f, 2.0f, 45.0f,CUBE1));
+}
+
+int getLevelEnemies(int waveCounter){
+    int num = 0;
+    switch(waveCounter){
+    case -1:
+        num = 4;
+        break;
+    case 0:
+        num = 8;
+        break;
+    case 1:
+        num = 10;
+        break;
+    case 2:
+        num = 12;
+        break;
+    }
+
+    return num;
+
+}
+
 // set makeprg=cd\ ..\ &&\ make\ run\ >/dev/null
 // vim: set spell spelllang=pt_br :
 
