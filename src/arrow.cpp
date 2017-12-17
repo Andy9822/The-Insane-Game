@@ -4,6 +4,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
+///calcula norma
 float norma(glm::vec4 v)
 {
     float vx = v.x;
@@ -13,6 +14,7 @@ float norma(glm::vec4 v)
     return sqrt( vx*vx + vy*vy + vz*vz );
 }
 
+///calcula produto vetorial
 glm::vec4 produtovetorial(glm::vec4 u, glm::vec4 v)
 {
     float u1 = u.x;
@@ -30,6 +32,7 @@ glm::vec4 produtovetorial(glm::vec4 u, glm::vec4 v)
     );
 }
 
+///Atualiza posicao da flecha conforme as leis da gravidade
 void updateArrow(Arrow *arrow, float timeElapsed){
 
     arrow->pos += arrow->speed * timeElapsed;

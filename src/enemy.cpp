@@ -2,6 +2,7 @@
 #include <glm/vec4.hpp>
 #include <cmath>
 
+///Atualiza posicao inimo que sempre vem olhando pra voce e na sua direcao
 void updateEnemy(Enemy *e, glm::vec4 camera_pos, float timeElapsed)
 {
     if(!e->fixed)

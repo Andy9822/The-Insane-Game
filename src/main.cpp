@@ -5,7 +5,13 @@
 // INF01047 Fundamentos de Computação Gráfica 2017/2
 //               Prof. Eduardo Gastal
 //
-//                   Trabalho Final
+//                  Trabalho Final
+//
+//     The Insane Game
+//
+//     Andy Ruiz Garramones - 00274705
+//     Guilherme Gomes Haetinger - 00274702
+//     Lucas Nunes Alegre - 00274693
 //
 
 // Arquivos "headers" padrões de C podem ser incluídos em um
@@ -130,7 +136,7 @@ struct SceneObject
     glm::vec3    bbox_max;
 };
 
-///Struct para as plataformas contendo os pontos xyz e escalacao de cada um
+///Struct para as plataformas contendo os pontos xyz e escalacao de cada Cubo
 struct Cubo
 {
     float x;
@@ -202,13 +208,8 @@ void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
 ///Element drawing
 void drawBackground(glm::vec4 &wallpaperPos);
-void draw3Enemies(glm::vec3 cubeCenter, float cubeHeight, float cubeRadius);
-void draw5Enemies(glm::vec3 cubeCenter, float cubeHeight, float cubeRadius);
 void createEnemies(int numEnemies, std::vector<Enemy>* enemies, std::vector<Cubo> cubos);
-void createRandomNextCube(vector<Cubo> *cubos, Cubo present);
 void generateFinalPlataform(vector<Cubo> *cubos, Cubo last);
-
-
 
 bool entreLimites(float posCamera, float eixo, float delta,float erro);
 bool caiuDemais(float antigoEixo,float novoEixo, float posEixo, float delta, float erro);
@@ -289,9 +290,8 @@ double g_LastCursorPosX, g_LastCursorPosY;
 GLuint g_NumLoadedTextures = 0;
 
 
-
 //===============================================================================================================
-///Variaveis para as teclas de movimentos
+///Variaveis Globais
 bool pressW = false;
 bool pressS = false;
 bool pressA = false;
@@ -305,31 +305,32 @@ bool DOUBLEJUMPING = false;
 bool MAGICPLATFORM = false;
 bool CAINDO = false;
 bool TELEPORTED = false;
-float gravidade = 0.005;
-int oldCubo = 0;
-int startJump = 0;
-double actualSecond;
-double whileTime;
-unsigned int startFall = 0;
+bool arrowReplaced = true;
+bool charging = false;
 bool enterPressed = false;
 bool busyWKey = false;
 bool busySKey = false;
 bool busyJUMPKey = false;
 bool endingPlatform = false;
-int level = 1;
-///Variaveis tiradas de serem globais
 bool WASD = false;
+float gravidade = 0.005;
 float antigoY = 0;
 float antigoX = 0;
 float antigoZ = 0;
 float novoX;
 float novoZ;
+float deslocamento = 1.5f;
+int oldCubo = 0;
+int startJump = 0;
+double chargeTime = 0.0f;
+double actualSecond;
+double whileTime;
+unsigned int startFall = 0;
+
+int level = 1;
+
 glm::vec4 nextPosition;
 glm::vec4 camera_view_vector;
-float deslocamento = 1.5f;
-bool charging = false;
-double chargeTime = 0.0f;
-bool arrowReplaced = true;
 
 glm::vec4 w;
 glm::vec4 u;
@@ -437,9 +438,7 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif"); // TextureImage1
     LoadTextureImage("../../data/skin.jpg");      // TextureImage2
     LoadTextureImage("../../data/bowText.jpg");      // TextureImage3
-
     LoadTextureImage("../../data/moon.jpg");      // TextureImage4
-
     LoadTextureImage("../../data/cube/hazard.jpg");      // TextureImage5
     LoadTextureImage("../../data/cube/bloc.jpg");      // TextureImage6
     LoadTextureImage("../../data/cube/box2.jpg");      // TextureImage7
@@ -494,6 +493,7 @@ int main(int argc, char* argv[])
     ComputeNormals(&ghostmodel);
     BuildTrianglesAndAddToVirtualScene(&ghostmodel);
 
+    ///Carregando objetos da animacao
     for(int i = 1; i<=9; i++)
     {
         std::stringstream sst;
@@ -505,6 +505,7 @@ int main(int argc, char* argv[])
         ComputeNormals(&bowmodel);
         BuildTrianglesAndAddToVirtualScene(&bowmodel);
     }
+     ///Carregando objetos da animacao
     for(int i = 10; i<=20; i++)
     {
         std::stringstream sst;
@@ -552,12 +553,14 @@ int main(int argc, char* argv[])
 
     while(true)
     {
+        ///Enquanto no menu toca a musica do menu
         engine->play2D("../../audio/menuSong.wav", true);
         int opMenu = menu();
         switch(opMenu)
         {
 
         case 0 :
+            ///Quando entrar no jogo pausa a musica do menu
             engine->stopAllSounds();
             engine->play2D("../../audio/initGame.wav", false);
             playGame();
@@ -576,6 +579,7 @@ int main(int argc, char* argv[])
             break;
 
         }
+        engine->stopAllSounds();
     }
 
     // Finalizamos o uso dos recursos do sistema operacional
@@ -585,6 +589,7 @@ int main(int argc, char* argv[])
     return 0;
 }
 
+///Printa os dialogos a partir do tempo e a string atual
 void printDialog(vector<std::string> dialog, double time, double startTime)
 {
 
@@ -600,9 +605,9 @@ void printDialog(vector<std::string> dialog, double time, double startTime)
 
 }
 
+///Gera inimigos randomicamente em volta dos cubos da fase atual
 void createEnemies(int numEnemies, std::vector<Enemy>* enemies, std::vector<Cubo> cubos)
 {
-
 
     srand(time(NULL));
     int maxIndex = cubos.size() - 1;
@@ -635,40 +640,14 @@ void createEnemies(int numEnemies, std::vector<Enemy>* enemies, std::vector<Cubo
     }
 }
 
-void createRandomNextCube(vector<Cubo> *cubos, Cubo present, int color)
-{
-
-    srand(time(NULL));
-
-    float randomx = ((float) rand()) / (float) RAND_MAX;
-
-    float diffx = 50.0f;
-    float rx = randomx * diffx;
-
-
-    float randomz = ((float) rand()) / (float) RAND_MAX;
-
-    float diffz = 20.0f;
-    float rz = randomz * diffz;
-
-
-    float randomy = ((float) rand()) / (float) RAND_MAX;
-
-    float diffy = 5.0f;
-    float ry = randomy * diffy;
-
-
-    cubos->push_back(Cubo(present.x - 25.0f + rx, present.y + ry, present.z - 10.0f + present.dz + rz,10.0f, 1.0f, 10.0f, color));
-}
-
-
+///Gera a plataforma do fim do jogo
 void generateFinalPlataform(vector<Cubo> *cubos, Cubo last)
 {
 
-    cubos->push_back(Cubo(last.x, last.y, last.z + last.dz/2 + 50.0f,100.0f, 1.0f, 100.0f, 1));
+    cubos->push_back(Cubo(last.x, last.y, last.z + last.dz/2 + 75.0f,100.0f, 1.0f, 100.0f, 1));
 
 }
-
+///Mostra o menu e interage com teclas pressionadas pelo usuario
 int menu()
 {
     int selectionTime = 0;
@@ -810,7 +789,7 @@ int menu()
 
 }
 
-
+///Mostra as opcoes do jogo
 void optionsMenu()
 {
 
@@ -888,6 +867,7 @@ void optionsMenu()
 
 }
 
+///Coloca pra jogar
 void playGame()
 {
 
@@ -922,6 +902,7 @@ void playGame()
 
     model = Matrix_Identity(); // Transformação identidade de modelagem
 
+    ///Carrega strings de dialogos
     std::vector<std::string> beginDialog;
     beginDialog.push_back("Come find me...");
     beginDialog.push_back("Release the ultimate power...");
@@ -995,8 +976,10 @@ void playGame()
             novoZ = camera_position_c.z;
             endingPlatform = false;
             CAINDO = true;
+            engine->play2D("../../audio/teleport.wav", false);
         }
 
+        ///Preparar variaveis para tratamento de colisao
         antigoX = camera_position_c.x;
         antigoZ = camera_position_c.z;
         WASD = pressA || pressD || pressS || pressW;
@@ -1129,7 +1112,7 @@ void playGame()
                      * Matrix_Rotate(3.14 - 3.14/5 - ((float)stretchCount/(19))*(5*3.14/16), camera_view_vector)
                      * Matrix_Rotate(g_CameraPhi, u)
                      * Matrix_Rotate(g_CameraTheta + 3.14, camera_up_vector)
-                     * Matrix_Scale(0.09, 0.09, 0.1);
+                     * Matrix_Scale(0.09, 0.11, 0.1);
             glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
             glUniform1i(object_id_uniform, ARM);
             DrawVirtualObject("rightHand");
@@ -1153,27 +1136,26 @@ void playGame()
                 DrawVirtualObject("cube");
             }
 
+            ///Enquanto nao se acabar o jogo
             if(!reachedAnEnd)
             {
 
-                ///FINALIZAR
+                ///Caso se chege na ultima fase e se acabem todas as waves se acaba o jogo
                 if(waveCounter == waveCounterLimit && level == 4 )
                 {
                     reachedAnEnd = true;
                     waveCounter = waveCounterLimit;
-                    //TODO
                     generateFinalPlataform(&cubos, cubos[cubos.size()-1]);
 
                 }
                 else
                 {
+                    ///geracao de inimigos
                     if(enemies.size() == 0)
                     {
+                        ///Teste se mudou de fase
                         if(endingPlatform && waveCounter>=0)
                         {
-                            createRandomNextCube(&cubos, cubos[cubos.size()-1], cubeText + 9);
-                            createRandomNextCube(&cubos, cubos[cubos.size()-1], cubeText + 9);
-                            createRandomNextCube(&cubos, cubos[cubos.size()-1], cubeText + 9);
                             endingPlatform = false;
                         }
 
@@ -1192,6 +1174,7 @@ void playGame()
                     }
                 }
             }
+            //Desenha o final
             else
             {
                 enemies.clear();
@@ -1282,6 +1265,7 @@ void playGame()
             }
 
             bool arrowCollides = false;
+            ///Tratamento de arrows
             for(unsigned i = 0; i < arrows.size(); i++)
             {
                 updateArrow(&arrows[i], whileTime);
@@ -1435,84 +1419,6 @@ void playGame()
 
 }
 
-void draw3Enemies(glm::vec3 cubeCenter, float cubeHeight, float cubeRadius)
-{
-
-    glm::mat4 model = Matrix_Identity();
-
-    model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(2 * 3.14/3 + glfwGetTime()),
-                             cubeCenter[1] + cubeHeight/2,
-                             cubeCenter[2] + cubeRadius*cos(2 * 3.14/3 + glfwGetTime()))
-            * Matrix_Scale(0.125f, 0.125f, 0.125f);
-    glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-    glUniform1i(object_id_uniform, ARROW);
-    DrawVirtualObject("clyde");
-
-
-    model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(4 * 3.14/3 + glfwGetTime()),
-                             cubeCenter[1] + cubeHeight/2,
-                             cubeCenter[2] + cubeRadius*cos(4 * 3.14/3 + glfwGetTime()))
-            * Matrix_Scale(0.25f, 0.25f, 0.25f);
-    glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-    glUniform1i(object_id_uniform, AIM);
-    DrawVirtualObject("pinky");
-
-    model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(2 * 3.14 + glfwGetTime()),
-                             cubeCenter[1] + cubeHeight/2,
-                             cubeCenter[2] + cubeRadius*cos(3.14/2 + glfwGetTime()))
-            * Matrix_Scale(0.25f, 0.25f, 0.25f);
-    glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-    glUniform1i(object_id_uniform, ARM);
-    DrawVirtualObject("inky");
-}
-
-void draw5Enemies(glm::vec3 cubeCenter, float cubeHeight, float cubeRadius)
-{
-
-    glm::mat4 model = Matrix_Identity();
-
-    model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(2 * 3.14/5 + glfwGetTime()),
-                             cubeCenter[1] + cubeHeight/2,
-                             cubeCenter[2] + cubeRadius*cos(2 * 3.14/5 + glfwGetTime()))
-            * Matrix_Scale(0.25f, 0.25f, 0.25f);
-    glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-    glUniform1i(object_id_uniform, ARROW);
-    DrawVirtualObject("clyde");
-
-
-    model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(4 * 3.14/5 + glfwGetTime()),
-                             cubeCenter[1] + cubeHeight/2,
-                             cubeCenter[2] + cubeRadius*cos(4 * 3.14/5 + glfwGetTime()))
-            * Matrix_Scale(0.25f, 0.25f, 0.25f);
-    glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-    glUniform1i(object_id_uniform, AIM);
-    DrawVirtualObject("pinky");
-
-    model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(6 * 3.14/5 + glfwGetTime()),
-                             cubeCenter[1] + cubeHeight/2,
-                             cubeCenter[2] + cubeRadius*cos(6 * 3.14/5 + glfwGetTime()))
-            * Matrix_Scale(0.25f, 0.25f, 0.25f);
-    glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-    glUniform1i(object_id_uniform, ARM);
-    DrawVirtualObject("inky");
-
-    model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(8 * 3.14/5 + glfwGetTime()),
-                             cubeCenter[1] + cubeHeight/2,
-                             cubeCenter[2] + cubeRadius*cos(8 * 3.14/5 + glfwGetTime()))
-            * Matrix_Scale(0.25f, 0.25f, 0.25f);
-    glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-    glUniform1i(object_id_uniform, ARROW);
-    DrawVirtualObject("clyde");
-
-
-    model = Matrix_Translate(cubeCenter[0] + cubeRadius*sin(2 * 3.14 + glfwGetTime()),
-                             cubeCenter[1] + cubeHeight/2,
-                             cubeCenter[2] + cubeRadius*cos(2 * 3.14 + glfwGetTime()))
-            * Matrix_Scale(0.25f, 0.25f, 0.25f);
-    glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-    glUniform1i(object_id_uniform, AIM);
-    DrawVirtualObject("pinky");
-}
 
 // Função que carrega uma imagem para ser utilizada como textura
 void LoadTextureImage(const char* filename)
@@ -2648,6 +2554,7 @@ void PrintObjModelInfo(ObjModel* model)
 /// ---------------------------------------------------------------------------------------
 ///Funcoes implementadas pelo Andy
 
+///Funcao que reseta a vida
 void resetLife(float *novoX,float *novoZ,std::vector<Cubo> &cubos)
 {
 
@@ -2866,6 +2773,7 @@ bool processaPouso(float antigoY,float cuboY,float cuboDY,float correcao)
     return false;
 }
 
+///Carrega as plataformas segunda o nivel que for
 void loadLevelPlatforms(std::vector<Cubo> &cubos){
     if (level == 1){
         //camera_position_c = glm::vec4(cubos[16].x, cubos[16].y + cubos[16].dy/2 + ALTURAHERO, cubos[16].z, 1.0f);
@@ -2934,6 +2842,7 @@ void processaMovimentos(bool WASD,float antigoX,float * novoX,float antigoZ,floa
     }
 }
 
+///Seleciona a flecha a retornar dependendo botao apertada
 ArrowType selectArrowType()
 {
     if(pressE)
@@ -2997,11 +2906,11 @@ void aplicaGravidade()
 
 }
 
+///Testa se chegou num ponto onde mudam as coisas
 void testCheckPoint(int nearestCube,std::vector<Cubo> cubos){
     if(level == 1 && nearestCube == 17){
         endingPlatform = true;
         level+=1;
-
     }
 
     if(level == 2 && nearestCube == 21 ){
@@ -3017,7 +2926,7 @@ void testCheckPoint(int nearestCube,std::vector<Cubo> cubos){
     }
 }
 
-///Carrega posicoes dos cubos. Pode ser hardcoded ou vir a ser leitura de arquivo
+///Carrega posicoes dos cubos.
 void loadFirstMap(std::vector<Cubo> &cubos)
 {
 
@@ -3047,7 +2956,7 @@ void loadFirstMap(std::vector<Cubo> &cubos)
 
 }
 
-///Carrega posicoes dos cubos. Pode ser hardcoded ou vir a ser leitura de arquivo
+///Carrega posicoes dos cubos.
 void loadSecondMap(std::vector<Cubo> &cubos)
 {
 
@@ -3081,7 +2990,7 @@ void loadSecondMap(std::vector<Cubo> &cubos)
 
 
 }
-
+///Carrega posicoes dos cubos.
 void loadThirdMap(std::vector<Cubo> &cubos){
     cubos.push_back(Cubo(0.0f,0.0f,0.0f,10.0f,1.0f,10.0f,5));
     cubos.push_back(Cubo(-100.5f, 45.0f, -1.5f, 25.0f, 2.0f, 25.0f,CUBE1));
@@ -3107,12 +3016,13 @@ void loadThirdMap(std::vector<Cubo> &cubos){
 
     cubos.push_back(Cubo(-395.5f, 45.0f, 420.5f, 8.0f, 2.0f, 8.0f,CUBE3));
 }
-
+///Carrega posicoes dos cubos.
 void loadFourthMap(std::vector<Cubo> &cubos){
     cubos.push_back(Cubo(0.0f,0.0f,0.0f,10.0f,1.0f,10.0f,5));
     cubos.push_back(Cubo(-255.5f, 50.0f, 200.5f, 40.9f, 2.0f, 45.0f,CUBE1));
 }
 
+///Retorna a quantidade de inimigos depdendendo a fase que for
 int getLevelEnemies(int waveCounter){
     int num = 0;
     switch(waveCounter){
@@ -3137,6 +3047,7 @@ int getLevelEnemies(int waveCounter){
 // set makeprg=cd\ ..\ &&\ make\ run\ >/dev/null
 // vim: set spell spelllang=pt_br :
 
+///Draw Background
 void drawBackground(glm::vec4 &wallpaperPos){
 
         model = Matrix_Translate(wallpaperPos.x, wallpaperPos.y + 250, wallpaperPos.z)
