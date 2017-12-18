@@ -2776,9 +2776,9 @@ bool processaPouso(float antigoY,float cuboY,float cuboDY,float correcao)
 ///Carrega as plataformas segunda o nivel que for
 void loadLevelPlatforms(std::vector<Cubo> &cubos){
     if (level == 1){
+        loadFirstMap(cubos);
         //camera_position_c = glm::vec4(cubos[16].x, cubos[16].y + cubos[16].dy/2 + ALTURAHERO, cubos[16].z, 1.0f);
         camera_position_c = glm::vec4(cubos[1].x, cubos[1].y + cubos[1].dy/2 + ALTURAHERO, cubos[1].z, 1.0f);
-        loadFirstMap(cubos);
     }
     if (level == 2){
         loadSecondMap(cubos);
@@ -2828,12 +2828,14 @@ void processaMovimentos(bool WASD,float antigoX,float * novoX,float antigoZ,floa
         ///So reseta a vida quando esta morto E aperta enter
         if(DIED && enterPressed)
         {
+            cout << "entrei aqui" << endl;
             enterPressed = false;
             resetLife(novoX,novoZ,cubos);
             CAINDO = false;
+
         }
         ///So muda a posicao do X e do Z se o movimento for permitido, ou seja, nao foi proibido por invadir um objeto
-        else if(!invadiuObjeto)
+         else if(!invadiuObjeto)
         {
             camera_position_c.x = *novoX;
             camera_position_c.z = *novoZ;
